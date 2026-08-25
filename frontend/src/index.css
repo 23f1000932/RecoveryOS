@@ -1,13 +1,20 @@
 /*
  * RecoveryOS — Global Styles
  *
- * Import order matters:
- * 1. Tailwind base (via @import "tailwindcss")
- * 2. Design tokens (CSS custom properties)
- * 3. Global base styles using those tokens
+ * Import order: @import rules must come first (before any selectors/rules).
+ * 1. Google Fonts (external @import — must be absolutely first)
+ * 2. Tailwind base
+ * 3. Design tokens (CSS custom properties)
+ * 4. Global base styles using those tokens
  */
 
+/* 1. Fonts — must be first */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Source+Sans+3:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+/* 2. Tailwind */
 @import "tailwindcss";
+
+/* 3. Design tokens */
 @import "./styles/tokens.css";
 
 /* ── Base Reset & Global Styles ─────────────────────────────────────────────── */

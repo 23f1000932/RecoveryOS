@@ -1,0 +1,23 @@
+/* Audit Log Page Styles */
+.page { min-height: 100vh; }
+.content { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 2rem; }
+
+.notice { padding: 1.5rem; }
+.notice .label-mono { margin-bottom: 0.75rem; color: var(--accent); }
+.noticeText { font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; color: var(--muted-foreground); }
+.noticeText a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+.legend { display: flex; flex-direction: column; gap: 1rem; }
+.legendTitle { }
+.legendGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
+.legendEntry { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
+.eventType {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent);
+  background: var(--accent-muted);
+  padding: 0.2rem 0.4rem;
+  border-radius: var(--radius-sm);
+  align-self: flex-start;
+}
+.eventDesc { font-family: var(--font-sans); font-size: 0.875rem; color: var(--muted-foreground); line-height: 1.4; }

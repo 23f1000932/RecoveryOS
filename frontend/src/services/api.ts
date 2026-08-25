@@ -49,13 +49,14 @@ async function request<T>(
 }
 
 export class ApiClientError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-    public readonly code?: string,
-  ) {
+  readonly status: number;
+  readonly code: string | undefined;
+
+  constructor(status: number, message: string, code?: string) {
     super(message);
     this.name = 'ApiClientError';
+    this.status = status;
+    this.code = code;
   }
 }
 
