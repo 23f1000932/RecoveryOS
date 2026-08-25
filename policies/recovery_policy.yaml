@@ -1,0 +1,74 @@
+# RecoveryOS — Merchant Recovery Policy
+# This is the authoritative policy configuration for the default merchant.
+# Loaded and validated at backend startup. Never bypass these values via LLM.
+
+version: "1.0"
+
+# ── Retry limits ──────────────────────────────────────────────────────────────
+# Maximum number of retry actions per customer per case
+max_retries_per_customer: 2
+
+# Maximum number of reminder messages per customer per case
+max_messages_per_customer: 2
+
+# ── Incentive budget ──────────────────────────────────────────────────────────
+# Maximum incentive value that can be granted to a single customer (in INR)
+max_incentive_per_customer: 100
+
+# Maximum total incentives that can be granted across all customers in one day (in INR)
+daily_incentive_pool: 5000
+
+# ── Value thresholds ──────────────────────────────────────────────────────────
+# Payments above this amount (INR) require explicit merchant approval
+high_value_threshold: 10000
+
+# Recovery window: cases older than this many hours are considered expired
+recovery_window_hours: 48
+
+# ── Quality thresholds ────────────────────────────────────────────────────────
+# Minimum expected net revenue (INR) for a recovery action to be worthwhile
+# Below this → do_nothing is selected
+min_expected_net_revenue: 100
+
+# Minimum model confidence score [0, 1] for automatic action
+# Below this → escalate or require approval
+min_model_confidence: 0.65
+
+# ── Automation ────────────────────────────────────────────────────────────────
+# Probability threshold for automatic execution without approval
+# Actions with confidence above this threshold can execute without human approval
+# (unless amount exceeds high_value_threshold)
+auto_action_probability: 0.70
+
+# ── Action cost model (in INR) ────────────────────────────────────────────────
+# These are the operational costs associated with each intervention type
+action_costs:
+  retry_now:
+    intervention_cost: 2.0
+    contact_cost: 0.0
+    incentive_cost: 0.0
+
+  retry_later:
+    intervention_cost: 2.0
+    contact_cost: 0.0
+    incentive_cost: 0.0
+
+  reminder:
+    intervention_cost: 1.0
+    contact_cost: 1.5
+    incentive_cost: 0.0
+
+  incentive:
+    intervention_cost: 1.0
+    contact_cost: 1.5
+    incentive_cost: 50.0   # default incentive value granted
+
+  escalate:
+    intervention_cost: 5.0
+    contact_cost: 0.0
+    incentive_cost: 0.0
+
+  do_nothing:
+    intervention_cost: 0.0
+    contact_cost: 0.0
+    incentive_cost: 0.0
