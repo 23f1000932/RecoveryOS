@@ -1,0 +1,16 @@
+/* Policies Page Styles */
+.page { min-height: 100vh; }
+.content { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.versionRow { display: flex; align-items: center; gap: 1rem; }
+.version { font-family: var(--font-mono); font-size: 0.875rem; background: var(--muted); padding: 0.25rem 0.5rem; border-radius: var(--radius-sm); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+.policyRow { padding: 1.25rem 1.5rem; }
+.policyLabel { margin-bottom: 0.5rem; }
+.policyValueRow { display: flex; align-items: baseline; gap: 0.5rem; }
+.policyValue { font-size: 1.5rem; letter-spacing: -0.02em; }
+.policyUnit { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); }
+.notice { padding: 1.25rem 1.5rem; color: var(--muted-foreground); font-size: 0.9375rem; line-height: 1.6; }
+.notice .label-mono { margin-bottom: 0.5rem; }
+.notice code { font-family: var(--font-mono); font-size: 0.875rem; background: var(--muted); padding: 0.1rem 0.4rem; border-radius: var(--radius-sm); }
+.loadingText { font-family: var(--font-mono); font-size: 0.875rem; color: var(--muted-foreground); }
+.errorCard { padding: 1rem 1.25rem; background-color: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }

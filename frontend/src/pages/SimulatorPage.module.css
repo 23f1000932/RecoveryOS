@@ -1,0 +1,21 @@
+/* Simulator Page Styles */
+.page { min-height: 100vh; }
+.content { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.configCard { padding: 1.75rem; }
+.configLabel { margin-bottom: 1rem; }
+.configRow { display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap; }
+.fieldGroup { display: flex; flex-direction: column; gap: 0.5rem; }
+.numberInput { width: 160px; }
+.configNote { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); margin-top: 1.25rem; line-height: 1.6; }
+.notice { padding: 1.25rem; color: var(--muted-foreground); font-family: var(--font-mono); font-size: 0.875rem; }
+.results { display: flex; flex-direction: column; gap: 1rem; }
+.resultsLabel { }
+.compareGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+.compareCard { padding: 1.5rem; }
+.compareTitle { margin-bottom: 0.5rem; }
+.compareValue { font-size: 1.75rem; letter-spacing: -0.03em; margin-bottom: 0.25rem; }
+.compareRate { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted-foreground); }
+.guardrailStats { display: flex; gap: 2rem; flex-wrap: wrap; padding: 1rem 0; border-top: 1px solid var(--border); }
+.placeholder { padding: 3rem; text-align: center; }
+.placeholderText { font-family: var(--font-serif); font-size: 1.25rem; margin-bottom: 0.5rem; }
+.placeholderHint { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted-foreground); }
