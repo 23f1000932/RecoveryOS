@@ -1,0 +1,4 @@
+/* StatusBadge — extra specificity for component use */
+.badge {
+  white-space: nowrap;
+}

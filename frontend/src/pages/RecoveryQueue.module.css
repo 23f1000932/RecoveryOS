@@ -1,0 +1,30 @@
+/* Recovery Queue Page Styles */
+.page { min-height: 100vh; }
+.content { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.filters { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.filterTab { font-size: 0.875rem; min-height: 36px; padding: 0 0.875rem; }
+.filterTabActive {
+  color: var(--accent) !important;
+  background-color: var(--accent-muted) !important;
+  border-color: rgba(184, 134, 11, 0.25) !important;
+}
+.caseList { display: flex; flex-direction: column; gap: 0.5rem; }
+.caseRow {
+  display: flex; flex-direction: column; gap: 0.75rem;
+  padding: 1rem 1.25rem; text-decoration: none; color: inherit;
+  transition: box-shadow var(--transition-base), border-color var(--transition-base), transform var(--transition-base);
+  cursor: pointer;
+}
+.caseRow:hover { box-shadow: var(--shadow-md); border-color: var(--accent); transform: translateX(2px); }
+.caseRowMain { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.caseId { font-size: 0.6875rem; }
+.caseAmount { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 600; margin-top: 0.125rem; }
+.caseRowMeta { display: flex; gap: 1.5rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); }
+.caseDate { margin-left: auto; }
+.errorCard { padding: 1rem 1.25rem; background-color: var(--danger-bg); color: var(--danger-text); border-color: var(--danger-border); }
+.loadingState { display: flex; flex-direction: column; gap: 0.5rem; }
+.skeletonRow { height: 80px; background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.emptyState { padding: 3rem; text-align: center; }
+.emptyStateText { font-family: var(--font-serif); font-size: 1.25rem; color: var(--foreground); margin-bottom: 0.5rem; }
+.emptyStateHint { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted-foreground); }

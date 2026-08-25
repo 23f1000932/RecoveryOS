@@ -1,0 +1,152 @@
+/* RecoveryOS — Sidebar Styles */
+
+.sidebar {
+  width: 240px;
+  min-height: 100vh;
+  background-color: var(--card);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* ── Wordmark ─────────────────────────────────────────────────────────────── */
+.wordmark {
+  padding: 1.75rem 1.5rem 1.5rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.1rem;
+}
+
+.wordmarkPrimary {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+}
+
+.wordmarkAccent {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.wordmarkVersion {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--muted-foreground);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-left: 0.5rem;
+  align-self: flex-end;
+  padding-bottom: 0.15rem;
+}
+
+/* ── Navigation ──────────────────────────────────────────────────────────── */
+.nav {
+  flex: 1;
+  padding: 1.25rem 0;
+}
+
+.navLabel {
+  padding: 0 1.5rem 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.navList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.6rem 1.5rem;
+  color: var(--muted-foreground);
+  text-decoration: none;
+  transition: all var(--transition-base);
+  position: relative;
+  cursor: pointer;
+}
+
+.navItem:hover {
+  color: var(--foreground);
+  background-color: var(--muted);
+}
+
+.navItemActive {
+  color: var(--foreground);
+  background-color: var(--accent-muted);
+}
+
+.navItemActive .navItemIndicator {
+  background-color: var(--accent);
+}
+
+/* Small dot indicator */
+.navItemIndicator {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: transparent;
+  margin-top: 0.55rem;
+  flex-shrink: 0;
+  transition: background-color var(--transition-base);
+}
+
+.navItem:hover .navItemIndicator {
+  background-color: var(--border-strong);
+}
+
+.navItemLabel {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.navItemDescription {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  line-height: 1.2;
+  margin-top: 0.05rem;
+}
+
+/* Left accent bar on active item */
+.navItemActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.footer {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.footerText {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted-foreground);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 1rem;
+  opacity: 0.7;
+}
