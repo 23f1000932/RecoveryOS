@@ -4,14 +4,17 @@ RecoveryOS — Dashboard API
 GET /api/dashboard/summary
 Returns aggregate financial metrics for the Command Center.
 All financial values are computed by backend SQL — never by frontend.
+
+Safe failure (Rule 4): when DATABASE_URL is not configured, returns
+a zeroed-out summary rather than a 500. The UI renders zeros correctly.
 """
 
 import logging
 from decimal import Decimal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
-from backend.db.repositories.recovery_cases import RecoveryCaseRepository
+from backend.db.connection import db_available
 from backend.domain.schemas import DashboardSummary
 
 logger = logging.getLogger(__name__)
@@ -27,18 +30,46 @@ def _fmt(value: Decimal | float | int | None) -> str:
     return f"{Decimal(str(value)):.2f}"
 
 
+def _zero_summary() -> DashboardSummary:
+    """Return a zeroed-out DashboardSummary when DB is unavailable."""
+    return DashboardSummary(
+        revenue_at_risk="0.00",
+        revenue_recovered="0.00",
+        baseline_recovered="0.00",
+        incremental_recovery="0.00",
+        net_incremental_recovery="0.00",
+        intervention_spend="0.00",
+        recovery_rate=0.0,
+        baseline_recovery_rate=0.0,
+        guardrail_stops=0,
+        escalations=0,
+        do_nothing_count=0,
+        total_cases=0,
+        pending_approval_count=0,
+    )
+
+
 @router.get("/summary", response_model=DashboardSummary)
 async def get_dashboard_summary() -> DashboardSummary:
     """
     Aggregate dashboard metrics.
     Revenue at Risk, Revenue Recovered, Baseline, Incremental, Net Incremental.
+
+    Returns zeros when the database is not configured (development mode).
     """
+    # Rule 4 — Safe failure: no DB → return zeros, not a 500
+    if not db_available():
+        logger.info("Dashboard summary: database not configured, returning zeros.")
+        return _zero_summary()
+
     try:
+        from backend.db.repositories.recovery_cases import RecoveryCaseRepository
+        from backend.db.repositories.experiments import ExperimentsRepository
+
         repo = RecoveryCaseRepository()
         data = await repo.get_dashboard_summary(MERCHANT_ID)
 
         # Use latest experiment run as baseline comparison if available
-        from backend.db.repositories.experiments import ExperimentsRepository
         exp_repo = ExperimentsRepository()
         experiments = await exp_repo.list_experiments(limit=1)
         baseline_recovered = Decimal("0")
@@ -65,12 +96,14 @@ async def get_dashboard_summary() -> DashboardSummary:
             intervention_spend=_fmt(intervention_spend),
             recovery_rate=round(recovery_rate, 4),
             baseline_recovery_rate=round(baseline_rate, 4),
-            guardrail_stops=int(data.get("do_nothing_count", 0)),
+            guardrail_stops=int(data.get("guardrail_stops", 0)),
             escalations=int(data.get("escalations", 0)),
             do_nothing_count=int(data.get("do_nothing_count", 0)),
             total_cases=total,
             pending_approval_count=int(data.get("pending_approval_count", 0)),
         )
+
     except Exception as exc:
         logger.error("Dashboard summary error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to load dashboard summary")
+        # Return zeros rather than crashing — the UI will show empty state
+        return _zero_summary()

@@ -32,6 +32,15 @@ async def get_pool() -> asyncpg.Pool:
     return _pool
 
 
+def db_available() -> bool:
+    """Return True if the DB pool has been initialised, False otherwise.
+
+    Use this in API endpoints to return graceful empty responses when
+    no DATABASE_URL is configured (Rule 4 — Safe failure).
+    """
+    return _pool is not None
+
+
 async def init_db() -> None:
     """
     Initialize the asyncpg connection pool.

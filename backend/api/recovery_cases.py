@@ -16,6 +16,7 @@ from decimal import Decimal
 
 from fastapi import APIRouter, HTTPException, Query
 
+from backend.db.connection import db_available
 from backend.db.repositories.audit import AuditRepository
 from backend.db.repositories.recovery_cases import RecoveryCaseRepository
 from backend.domain.enums import ApprovalStatus, CaseStatus
@@ -50,7 +51,13 @@ async def list_recovery_cases(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
 ) -> RecoveryCaseListResponse:
-    """List recovery cases with optional status filter."""
+    """List recovery cases with optional status filter.
+
+    Returns an empty list when the database is not configured (Rule 4 — Safe failure).
+    """
+    if not db_available():
+        return RecoveryCaseListResponse(cases=[], total=0, page=page, page_size=page_size)
+
     try:
         repo = RecoveryCaseRepository()
         cases_data, total = await repo.list_cases(
