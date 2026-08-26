@@ -193,12 +193,13 @@ def generate_dataset(rows: int = 10_000, seed: int = 42) -> pd.DataFrame:
         lambda c: encode_failure_code(c)
     )
 
-    # Step 5: Add case IDs (deterministic UUIDs via seeded UUIDs)
+    # Step 5: Add case IDs (deterministic from seed — two int64 halves → 128-bit UUID)
     case_rng = np.random.default_rng(seed=seed + 999_999)
-    case_ids = [
-        str(uuid.UUID(int=int(case_rng.integers(0, 2**128))))
-        for _ in range(rows)
-    ]
+    case_ids: list[str] = []
+    for _ in range(rows):
+        high = int(case_rng.integers(0, 2**63, dtype=np.int64))
+        low  = int(case_rng.integers(0, 2**63, dtype=np.int64))
+        case_ids.append(str(uuid.UUID(int=(high << 64) | low)))
     df.insert(0, "case_id", case_ids)
 
     # Step 6: Generate latent potential outcomes (the counterfactual core)
