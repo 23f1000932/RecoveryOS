@@ -87,10 +87,15 @@ class RecoveryPipeline:
 
     Args:
         model:          Any RecoveryOutcomeModel implementation.
+                        Phase 4+: auto-loaded via create_pipeline() factory.
         execution_mode: SIMULATION, TEST_MODE, or DRY_RUN.
 
     Usage:
-        pipeline = RecoveryPipeline(model=RuleBasedRecoveryModel(),
+        # Recommended — auto-loads XGBoost, falls back to RuleBasedRecoveryModel
+        pipeline = create_pipeline(execution_mode=ExecutionMode.SIMULATION)
+
+        # Or explicit:
+        pipeline = RecoveryPipeline(model=XGBoostRecoveryModel(),
                                     execution_mode=ExecutionMode.SIMULATION)
         proposal = await pipeline.process_case(context, source=PipelineSource.SIMULATOR)
     """
@@ -269,3 +274,37 @@ class RecoveryPipeline:
             model_version=final_result.model_version,
             policy_version=policy.version,
         )
+
+
+def create_pipeline(
+    execution_mode: ExecutionMode = ExecutionMode.SIMULATION,
+) -> RecoveryPipeline:
+    """
+    Factory that creates a RecoveryPipeline with the best available model.
+
+    Priority:
+      1. XGBoostRecoveryModel  — if ml/models/*.joblib artifacts exist (Phase 4+)
+      2. RuleBasedRecoveryModel — deterministic fallback (Rule 4 — Safe failure)
+
+    Usage:
+        pipeline = create_pipeline()
+        proposal = await pipeline.process_case(context, source=PipelineSource.SIMULATOR)
+
+    To train XGBoost artifacts:
+        .venv\\Scripts\\python -m ml.train --rows 50000 --seed 42
+    """
+    from backend.ml_models.xgboost_model import ModelNotTrainedError, XGBoostRecoveryModel
+    from backend.ml_models.rule_based import RuleBasedRecoveryModel
+
+    try:
+        model = XGBoostRecoveryModel()
+        logger.info("create_pipeline: using XGBoostRecoveryModel (trained artifacts found)")
+    except (ModelNotTrainedError, Exception) as exc:
+        logger.warning(
+            "create_pipeline: XGBoost artifacts unavailable (%s). "
+            "Falling back to RuleBasedRecoveryModel (Rule 4 — Safe failure).",
+            exc,
+        )
+        model = RuleBasedRecoveryModel()
+
+    return RecoveryPipeline(model=model, execution_mode=execution_mode)
