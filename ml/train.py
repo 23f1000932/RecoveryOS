@@ -173,16 +173,16 @@ def run_training(rows: int, seed: int) -> None:
     )
 
     # Print summary table
-    print("\n─── Evaluation Summary ───────────────────────────────────")
+    print("\n--- Evaluation Summary -------------------------------------------")
     print(f"{'Action':<14} {'F1':>6} {'PR-AUC':>8} {'Recall':>8} {'Precision':>10}")
-    print("─" * 52)
+    print("-" * 52)
     for action in ActionType:
         m = metrics[action]
         print(
             f"{action.value:<14} {m.f1:>6.3f} {m.pr_auc:>8.3f} "
             f"{m.recall:>8.3f} {m.precision:>10.3f}"
         )
-    print("─" * 52)
+    print("-" * 52)
 
 
 def main() -> None:

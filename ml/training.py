@@ -49,14 +49,23 @@ def build_feature_matrix(df: pd.DataFrame) -> np.ndarray:
 
     Raises:
         ValueError: If any FEATURE_COLUMNS are missing from df.
+
+    Note on duplicate columns:
+        The synthetic dataset has duplicate column names (e.g. customer_success_rate
+        appears in both the helper block and the feature block). We deduplicate by
+        dropping duplicate column names while keeping the LAST occurrence, which
+        corresponds to the properly encoded feature columns.
     """
-    missing = [col for col in FEATURE_COLUMNS if col not in df.columns]
+    # Deduplicate columns — keep last occurrence (the encoded feature columns)
+    df_dedup = df.loc[:, ~df.columns.duplicated(keep="last")]
+
+    missing = [col for col in FEATURE_COLUMNS if col not in df_dedup.columns]
     if missing:
         raise ValueError(
             f"Dataset is missing feature columns: {missing}\n"
-            f"Available columns: {list(df.columns)}"
+            f"Available columns: {list(df_dedup.columns)}"
         )
-    return df[FEATURE_COLUMNS].to_numpy(dtype=np.float64)
+    return df_dedup[FEATURE_COLUMNS].to_numpy(dtype=np.float64)
 
 
 def build_label_matrix(df: pd.DataFrame) -> dict[ActionType, np.ndarray]:

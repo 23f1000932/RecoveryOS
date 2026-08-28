@@ -11,7 +11,6 @@ import os
 import tempfile
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pytest
@@ -24,6 +23,21 @@ from backend.ml_models.xgboost_model import (
     MODEL_VERSION,
 )
 from backend.orchestrator.context import CaseContext, RecoveryPolicy
+
+
+# ── Picklable dummy classifier (MagicMock cannot be joblib-serialised) ─────────
+
+class DummyClf:
+    """Minimal sklearn-compatible binary classifier for unit testing."""
+
+    def __init__(self, prob: float = 0.75):
+        self.prob = prob
+
+    def predict_proba(self, X: np.ndarray) -> np.ndarray:
+        n = len(X)
+        return np.column_stack(
+            [np.full(n, 1 - self.prob), np.full(n, self.prob)]
+        )
 
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
@@ -67,30 +81,23 @@ def _make_context() -> CaseContext:
     )
 
 
-def _make_mock_clf(prob: float = 0.75) -> MagicMock:
-    """Create a mock classifier that returns a fixed probability."""
-    clf = MagicMock()
-    clf.predict_proba.return_value = np.array([[1 - prob, prob]])
-    return clf
+_ACTION_PROBS = {
+    ActionType.RETRY_NOW: 0.61,
+    ActionType.RETRY_LATER: 0.79,
+    ActionType.REMINDER: 0.52,
+    ActionType.INCENTIVE: 0.87,
+    ActionType.ESCALATE: 0.40,
+    ActionType.DO_NOTHING: 0.08,
+}
 
 
-def _mock_artifacts(tmp_dir: Path) -> dict[ActionType, MagicMock]:
-    """Create mock .joblib files in tmp_dir and return the mock classifiers."""
+def _write_dummy_artifacts(artifact_dir: Path) -> None:
+    """Write real picklable DummyClf .joblib files to artifact_dir."""
     import joblib
-    mocks: dict[ActionType, MagicMock] = {}
-    probs = {
-        ActionType.RETRY_NOW: 0.61,
-        ActionType.RETRY_LATER: 0.79,
-        ActionType.REMINDER: 0.52,
-        ActionType.INCENTIVE: 0.87,
-        ActionType.ESCALATE: 0.40,
-        ActionType.DO_NOTHING: 0.08,
-    }
     for action in ActionType:
-        clf = _make_mock_clf(probs[action])
-        mocks[action] = clf
-        joblib.dump(clf, tmp_dir / f"{action.value}.joblib")
-    return mocks
+        clf = DummyClf(prob=_ACTION_PROBS[action])
+        joblib.dump(clf, artifact_dir / f"{action.value}.joblib")
+
 
 
 # ── Tests ──────────────────────────────────────────────────────────────────────
@@ -106,14 +113,14 @@ class TestXGBoostModel:
     def test_loads_from_valid_artifact_dir(self):
         """Should load successfully when all 6 .joblib files exist."""
         with tempfile.TemporaryDirectory() as tmp:
-            _mock_artifacts(Path(tmp))
+            _write_dummy_artifacts(Path(tmp))
             model = XGBoostRecoveryModel(artifact_dir=Path(tmp))
             assert model is not None
 
     def test_returns_all_6_action_predictions(self):
         """predict_action_outcomes must return exactly one prediction per ActionType."""
         with tempfile.TemporaryDirectory() as tmp:
-            _mock_artifacts(Path(tmp))
+            _write_dummy_artifacts(Path(tmp))
             model = XGBoostRecoveryModel(artifact_dir=Path(tmp))
             ctx = _make_context()
             preds = model.predict_action_outcomes(ctx, list(ActionType))
@@ -124,7 +131,7 @@ class TestXGBoostModel:
     def test_probabilities_in_unit_interval(self):
         """All predicted probabilities must be in (0, 1)."""
         with tempfile.TemporaryDirectory() as tmp:
-            _mock_artifacts(Path(tmp))
+            _write_dummy_artifacts(Path(tmp))
             model = XGBoostRecoveryModel(artifact_dir=Path(tmp))
             ctx = _make_context()
             preds = model.predict_action_outcomes(ctx, list(ActionType))
@@ -136,7 +143,7 @@ class TestXGBoostModel:
     def test_model_name_and_version_in_predictions(self):
         """All predictions must report xgboost_recovery / xgb_v1."""
         with tempfile.TemporaryDirectory() as tmp:
-            _mock_artifacts(Path(tmp))
+            _write_dummy_artifacts(Path(tmp))
             model = XGBoostRecoveryModel(artifact_dir=Path(tmp))
             ctx = _make_context()
             preds = model.predict_action_outcomes(ctx, list(ActionType))
