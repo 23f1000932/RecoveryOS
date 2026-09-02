@@ -71,24 +71,15 @@ class GeminiAgent:
         logger.info("GeminiAgent initialised: model=%s timeout=%.1fs", model, timeout)
 
     def _get_client(self):
-        """Lazy-initialise the Gemini GenerativeModel client."""
+        """Lazy-initialise the google-genai Client."""
         if self._client is None:
             try:
-                import google.generativeai as genai
-                genai.configure(api_key=self._api_key)
-                self._client = genai.GenerativeModel(
-                    model_name=self._model_name,
-                    system_instruction=SYSTEM_PROMPT,
-                    generation_config={
-                        "response_mime_type": "application/json",
-                        "temperature": 0.3,         # low temperature for factual explanation
-                        "max_output_tokens": 512,
-                    },
-                )
+                from google import genai
+                self._client = genai.Client(api_key=self._api_key)
             except ImportError:
                 logger.error(
-                    "GeminiAgent: google-generativeai is not installed. "
-                    "Run: pip install google-generativeai"
+                    "GeminiAgent: google-genai is not installed. "
+                    "Run: pip install google-genai"
                 )
                 raise
         return self._client
@@ -139,15 +130,29 @@ class GeminiAgent:
 
         Separated from explain() so asyncio.wait_for() can cancel it cleanly.
         """
+        from google import genai
+        from google.genai import types
+
         user_message = build_user_message(proposal, context)
 
-        # Run the synchronous Gemini SDK call in a thread so we don't block the event loop
+        # Run the synchronous google-genai SDK call in a thread executor
         loop = asyncio.get_event_loop()
         client = self._get_client()
 
+        config = types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            response_mime_type="application/json",
+            temperature=0.3,
+            max_output_tokens=512,
+        )
+
         response = await loop.run_in_executor(
             None,
-            lambda: client.generate_content(user_message),
+            lambda: client.models.generate_content(
+                model=self._model_name,
+                contents=user_message,
+                config=config,
+            ),
         )
 
         raw_text = response.text.strip()
