@@ -35,12 +35,16 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from backend.domain.enums import ActionType, ExecutionMode, PipelineSource
 from backend.guardrails.engine import GuardrailEngine
 from backend.ml_models.protocol import RecoveryOutcomeModel
 from backend.optimizer.expected_value import rank_actions
 from backend.orchestrator.context import CaseContext, DecisionProposal
+
+if TYPE_CHECKING:
+    from backend.agents.agent import GeminiAgent
 
 logger = logging.getLogger(__name__)
 
@@ -104,12 +108,15 @@ class RecoveryPipeline:
         self,
         model: RecoveryOutcomeModel,
         execution_mode: ExecutionMode = ExecutionMode.SIMULATION,
+        agent: "GeminiAgent | None" = None,
     ) -> None:
         self._model = model
         self._execution_mode = execution_mode
+        self._agent = agent
         logger.info(
-            "RecoveryPipeline initialized: model=%s mode=%s",
+            "RecoveryPipeline initialized: model=%s mode=%s agent=%s",
             type(model).__name__, execution_mode.value,
+            type(agent).__name__ if agent else "None",
         )
 
     async def process_case(
@@ -232,12 +239,47 @@ class RecoveryPipeline:
             recommended_action = final_result.selected_action
 
         # ── Stage 8: Explain ──────────────────────────────────────────────────
-        explanation = _build_explanation(
+        # Phase 5: try Gemini first; fall back to template on any failure (Rule 4).
+        template_explanation = _build_explanation(
             proposal_action=recommended_action,
             enr=final_result.selected_expected_net_revenue,
             verdict=guardrail_result.verdict,
         )
-        logger.debug("[Stage 8: Explain] case=%s explanation=%r", case_id, explanation[:60])
+        agent_key_factors: list[str] = []
+        agent_confidence_note: str = ""
+
+        if self._agent is not None:
+            # Build a draft proposal to give the agent full context
+            _draft = DecisionProposal(
+                case_id=case_id,
+                recommended_action=recommended_action,
+                optimization_result=final_result,
+                guardrail_result=guardrail_result,
+                requires_approval=requires_approval,
+                explanation=template_explanation,
+                model_name=final_result.model_name,
+                model_version=final_result.model_version,
+                policy_version=policy.version,
+            )
+            agent_result = await self._agent.explain(_draft, context)
+            if agent_result is not None:
+                explanation = agent_result.explanation
+                agent_key_factors = agent_result.key_factors
+                agent_confidence_note = agent_result.confidence_note
+                logger.debug(
+                    "[Stage 8: Explain] case=%s source=gemini factors=%d",
+                    case_id, len(agent_key_factors),
+                )
+            else:
+                explanation = template_explanation
+                logger.debug(
+                    "[Stage 8: Explain] case=%s source=template (agent fallback)", case_id
+                )
+        else:
+            explanation = template_explanation
+            logger.debug(
+                "[Stage 8: Explain] case=%s source=template (no agent configured)", case_id
+            )
 
         # ── Stage 9: Measure ──────────────────────────────────────────────────
         # Financial values are already in OptimizationResult — nothing to do here.
@@ -307,4 +349,24 @@ def create_pipeline(
         )
         model = RuleBasedRecoveryModel()
 
-    return RecoveryPipeline(model=model, execution_mode=execution_mode)
+    # ── Phase 5: Wire Gemini agent (optional) ─────────────────────────────────
+    agent = None
+    from backend.config import get_settings
+    settings = get_settings()
+    if settings.gemini_available:
+        try:
+            from backend.agents.agent import GeminiAgent
+            agent = GeminiAgent(
+                api_key=settings.gemini_api_key,
+                model=settings.gemini_model,
+                timeout=settings.gemini_timeout_seconds,
+            )
+            logger.info("create_pipeline: GeminiAgent wired (model=%s)", settings.gemini_model)
+        except Exception as exc:
+            logger.warning(
+                "create_pipeline: Failed to init GeminiAgent (%s). "
+                "Template explanation will be used (Rule 4 — Safe failure).",
+                exc,
+            )
+
+    return RecoveryPipeline(model=model, execution_mode=execution_mode, agent=agent)

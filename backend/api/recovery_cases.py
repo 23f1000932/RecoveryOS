@@ -45,6 +45,39 @@ def _fmt(value) -> str | None:
     return f"{Decimal(str(value)):.2f}"
 
 
+def _decimal(value) -> Decimal:
+    """Convert any numeric value to Decimal safely."""
+    try:
+        return Decimal(str(value))
+    except Exception:
+        return Decimal("0")
+
+
+def _load_policy():
+    """Load the active recovery policy from YAML (same pattern as policies.py)."""
+    import yaml
+    from backend.config import get_settings
+    from backend.orchestrator.context import RecoveryPolicy
+    settings = get_settings()
+    try:
+        with open(settings.policy_path, "r", encoding="utf-8") as f:
+            raw = yaml.safe_load(f)
+    except FileNotFoundError:
+        raw = {}
+    return RecoveryPolicy(
+        version=str(raw.get("version", "1.0")),
+        max_retries_per_customer=int(raw.get("max_retries_per_customer", 2)),
+        max_messages_per_customer=int(raw.get("max_messages_per_customer", 2)),
+        max_incentive_per_customer=_decimal(raw.get("max_incentive_per_customer", 100)),
+        daily_incentive_pool=_decimal(raw.get("daily_incentive_pool", 5000)),
+        high_value_threshold=_decimal(raw.get("high_value_threshold", 10000)),
+        min_expected_net_revenue=_decimal(raw.get("min_expected_net_revenue", 100)),
+        min_model_confidence=float(raw.get("min_model_confidence", 0.65)),
+        recovery_window_hours=int(raw.get("recovery_window_hours", 48)),
+        auto_action_probability=float(raw.get("auto_action_probability", 0.70)),
+    )
+
+
 @router.get("", response_model=RecoveryCaseListResponse)
 async def list_recovery_cases(
     status: str | None = Query(None, description="Filter by case status"),
@@ -169,16 +202,99 @@ async def get_recovery_case(case_id: str) -> RecoveryCaseDetail:
 @router.post("/{case_id}/analyze")
 async def analyze_case(case_id: str) -> dict:
     """
-    Trigger analysis pipeline for a case.
-    Runs Detect → Contextualize → Predict → Optimize → Guard.
+    Run the full recovery analysis pipeline for a case.
+
+    Stages: Detect → Contextualize → Predict → Optimize → Guard → Re-Optimize
+            → Approval → Explain (Gemini or template) → Measure → Audit
+
     Does NOT execute a money-moving action.
-    Wired to RecoveryPipeline in Phase 7.
+    Returns the DecisionProposal as a structured dict.
+
+    Rule 4 — Safe failure: returns an error dict if DB is unavailable.
     """
-    # Phase 1 stub — returns not-yet-implemented message
+    if not db_available():
+        return {
+            "case_id": case_id,
+            "status": "error",
+            "error": {
+                "code": "DB_UNAVAILABLE",
+                "message": "Database is not configured. Cannot load case for analysis.",
+            },
+        }
+
+    from backend.db.repositories.payments import PaymentsRepository
+    from backend.db.repositories.customers import CustomersRepository
+    from backend.orchestrator.context import CaseContext
+    from backend.orchestrator.recovery_pipeline import create_pipeline
+    from backend.domain.enums import ExecutionMode, PipelineSource
+
+    # ── Load case ─────────────────────────────────────────────────────────────
+    case_repo = RecoveryCaseRepository()
+    case = await case_repo.get_case(case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    # ── Load supporting data ───────────────────────────────────────────────────
+    pay_repo = PaymentsRepository()
+    cust_repo = CustomersRepository()
+
+    payment = await pay_repo.get_payment(str(case["payment_id"])) or {}
+    customer = await cust_repo.get_customer(str(case["customer_id"])) or {}
+    policy = _load_policy()
+
+    tx_count = customer.get("transaction_count", 1)
+    success_count = customer.get("success_count", 0)
+    failure_count = customer.get("failure_count", 0)
+    success_rate = round(success_count / max(tx_count, 1), 4)
+
+    # ── Build CaseContext ──────────────────────────────────────────────────────
+    context = CaseContext(
+        case_id=case_id,
+        payment_id=str(case["payment_id"]),
+        customer_id=str(case["customer_id"]),
+        merchant_id=str(case.get("merchant_id", MERCHANT_ID)),
+        amount=_decimal(payment.get("amount", 0)),
+        currency=payment.get("currency", "INR"),
+        method=payment.get("method", "card"),
+        failure_code=payment.get("failure_code", "unknown"),
+        attempt_number=int(payment.get("attempt_number", 1)),
+        customer_success_rate=float(success_rate),
+        customer_transaction_count=int(tx_count),
+        customer_success_count=int(success_count),
+        customer_failure_count=int(failure_count),
+        customer_avg_amount=_decimal(customer.get("avg_amount", payment.get("amount", 0))),
+        time_since_failure_hours=float(case.get("time_since_failure_hours", 1.0)),
+        hour_of_day=int(case.get("hour_of_day", 12)),
+        day_of_week=int(case.get("day_of_week", 1)),
+        previous_failure_count=int(case.get("previous_failure_count", 0)),
+        policy=policy,
+    )
+
+    # ── Run pipeline ───────────────────────────────────────────────────────────
+    pipeline = create_pipeline(execution_mode=ExecutionMode.SIMULATION)
+    proposal = await pipeline.process_case(context, source=PipelineSource.DASHBOARD)
+
     return {
         "case_id": case_id,
-        "status": "not_implemented",
-        "message": "Analysis pipeline will be wired in Phase 7.",
+        "status": "analyzed",
+        "recommended_action": proposal.recommended_action.value,
+        "explanation": proposal.explanation,
+        "requires_approval": proposal.requires_approval,
+        "expected_net_revenue": str(proposal.optimization_result.selected_expected_net_revenue),
+        "guardrail_verdict": proposal.guardrail_result.verdict,
+        "model_name": proposal.model_name,
+        "model_version": proposal.model_version,
+        "policy_version": proposal.policy_version,
+        "candidates": [
+            {
+                "action": c.action.value,
+                "probability": round(c.probability, 4),
+                "expected_net_revenue": str(c.expected_net_revenue),
+                "allowed": c.allowed,
+                "rank": c.rank,
+            }
+            for c in proposal.optimization_result.candidates
+        ],
     }
 
 
