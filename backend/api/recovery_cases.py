@@ -400,13 +400,69 @@ async def execute_case(case_id: str, body: ExecuteRequest) -> ExecuteResponse:
             },
         )
 
-    # Phase 1 stub — full execution wired in Phase 7
+    # ── Phase 6: Real pipeline execution ──────────────────────────────────────
+    from backend.db.repositories.payments import PaymentsRepository
+    from backend.db.repositories.customers import CustomersRepository
+    from backend.orchestrator.context import CaseContext
+    from backend.orchestrator.recovery_pipeline import create_pipeline
+    from backend.domain.enums import ExecutionMode, PipelineSource
+
+    pay_repo = PaymentsRepository()
+    cust_repo = CustomersRepository()
+    payment = await pay_repo.get_payment(str(case["payment_id"])) or {}
+    customer = await cust_repo.get_customer(str(case["customer_id"])) or {}
+    policy = _load_policy()
+
+    tx_count = customer.get("transaction_count", 1)
+    success_count = customer.get("success_count", 0)
+    success_rate = round(success_count / max(tx_count, 1), 4)
+
+    context = CaseContext(
+        case_id=case_id,
+        payment_id=str(case["payment_id"]),
+        customer_id=str(case["customer_id"]),
+        merchant_id=str(case.get("merchant_id", MERCHANT_ID)),
+        amount=_decimal(payment.get("amount", 0)),
+        currency=payment.get("currency", "INR"),
+        method=payment.get("method", "card"),
+        failure_code=payment.get("failure_code", "unknown"),
+        attempt_number=int(payment.get("attempt_number", 1)),
+        customer_success_rate=float(success_rate),
+        customer_transaction_count=int(tx_count),
+        customer_success_count=int(success_count),
+        customer_failure_count=int(customer.get("failure_count", 0)),
+        customer_avg_amount=_decimal(customer.get("avg_amount", payment.get("amount", 0))),
+        time_since_failure_hours=float(case.get("time_since_failure_hours", 1.0)),
+        hour_of_day=int(case.get("hour_of_day", 12)),
+        day_of_week=int(case.get("day_of_week", 1)),
+        previous_failure_count=int(case.get("previous_failure_count", 0)),
+        policy=policy,
+    )
+
+    # Run full pipeline with execute=True
+    pipeline = create_pipeline(execution_mode=ExecutionMode.TEST_MODE)
+    proposal = await pipeline.process_case(
+        context,
+        source=PipelineSource.DASHBOARD,
+        approved=(current_status == CaseStatus.APPROVED),
+        execute=True,
+    )
+
     return ExecuteResponse(
         case_id=case_id,
-        case_status=current_status,
-        action_executed=None,
-        actual_recovered=None,
-        message="Execution pipeline will be wired in Phase 7.",
+        case_status=(
+            CaseStatus.RECOVERED if (proposal.executed and proposal.actual_recovered > 0)
+            else CaseStatus.FAILED if proposal.executed
+            else current_status
+        ),
+        action_executed=proposal.recommended_action,
+        actual_recovered=_fmt(proposal.actual_recovered) if proposal.executed else None,
+        message=(
+            f"Executed {proposal.recommended_action.value}. "
+            f"Payment {'recovered' if proposal.actual_recovered > 0 else 'not recovered'}."
+            if proposal.executed
+            else "Execution blocked — approval required."
+        ),
     )
 
 

@@ -119,11 +119,66 @@ class RecoveryPipeline:
             type(agent).__name__ if agent else "None",
         )
 
+    async def _execute_action(
+        self,
+        case_id: str,
+        recommended_action: ActionType,
+        context: CaseContext,
+        attempt_number: int = 1,
+    ):
+        """
+        Dispatch to the correct action adapter based on ActionType.
+
+        Returns ActionResult — never raises.
+        """
+        from backend.tools.retry import RetryAdapter
+        from backend.tools.reminder import ReminderAdapter
+        from backend.tools.incentive import IncentiveAdapter
+        from backend.tools.escalation import EscalationAdapter
+        from backend.tools.stop import StopAdapter
+
+        action = recommended_action
+
+        if action == ActionType.RETRY_NOW or action == ActionType.RETRY_LATER:
+            return await RetryAdapter().execute(
+                case_id=case_id,
+                action=action.value,
+                context=context,
+                attempt_number=attempt_number,
+            )
+        elif action == ActionType.REMINDER:
+            return await ReminderAdapter().execute(
+                case_id=case_id,
+                context=context,
+                attempt_number=attempt_number,
+            )
+        elif action == ActionType.INCENTIVE:
+            return await IncentiveAdapter().execute(
+                case_id=case_id,
+                context=context,
+                attempt_number=attempt_number,
+            )
+        elif action == ActionType.ESCALATE:
+            return await EscalationAdapter().execute(
+                case_id=case_id,
+                context=context,
+                attempt_number=attempt_number,
+            )
+        else:
+            # DO_NOTHING or unknown
+            return await StopAdapter().execute(
+                case_id=case_id,
+                context=context,
+                reason="do_nothing selected by optimizer",
+                attempt_number=attempt_number,
+            )
+
     async def process_case(
         self,
         context: CaseContext,
         source: PipelineSource = PipelineSource.SIMULATOR,
         approved: bool = False,
+        execute: bool = False,
     ) -> DecisionProposal:
         """
         Run the full 10-stage pipeline for a single recovery case.
@@ -305,7 +360,8 @@ class RecoveryPipeline:
             guardrail_result.audit_events,
         )
 
-        return DecisionProposal(
+        # Build the draft proposal (analysis complete)
+        proposal = DecisionProposal(
             case_id=case_id,
             recommended_action=recommended_action,
             optimization_result=final_result,
@@ -316,6 +372,66 @@ class RecoveryPipeline:
             model_version=final_result.model_version,
             policy_version=policy.version,
         )
+
+        # ── Stage 7: Execute ──────────────────────────────────────────────────
+        if execute:
+            if requires_approval and not approved:
+                logger.warning(
+                    "[Stage 7: Execute] BLOCKED — approval required. case=%s", case_id
+                )
+                # Return analysis-only proposal
+                return proposal
+
+            action_result = await self._execute_action(
+                case_id=case_id,
+                recommended_action=recommended_action,
+                context=context,
+                attempt_number=1,
+            )
+            logger.info(
+                "[Stage 7: Execute] case=%s action=%s success=%s ref=%s",
+                case_id,
+                recommended_action.value,
+                action_result.success,
+                action_result.provider_reference,
+            )
+
+            # ── Stage 8: Verify ───────────────────────────────────────────────
+            from backend.tools.verification import VerificationAdapter
+            verifier = VerificationAdapter()
+            verification = await verifier.verify(
+                case_id=case_id,
+                context=context,
+                action_result_reference=action_result.provider_reference,
+            )
+            logger.info(
+                "[Stage 8: Verify] case=%s recovered=%s actual=%.2f",
+                case_id,
+                verification.payment_recovered,
+                verification.actual_recovered,
+            )
+
+            # ── Stage 9: Measure (actual) ───────────────────────────────────
+            # Baseline: do_nothing recovers 0
+            baseline_recovered = Decimal("0")
+            ai_recovered = verification.actual_recovered
+            ai_cost = action_result.cost
+            incremental = ai_recovered - baseline_recovered
+            net_incremental = incremental - ai_cost
+
+            proposal.action_result = action_result
+            proposal.verification_result = verification
+            proposal.actual_recovered = ai_recovered
+            proposal.incremental_recovery = incremental
+            proposal.net_incremental_recovery = net_incremental
+            proposal.executed = True
+
+            logger.info(
+                "[Stage 9: Measure] case=%s actual=%.2f incremental=%.2f net=%.2f",
+                case_id, ai_recovered, incremental, net_incremental,
+            )
+
+        return proposal
 
 
 def create_pipeline(

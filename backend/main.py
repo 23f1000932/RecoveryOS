@@ -73,6 +73,5 @@ app.include_router(cases_router, prefix="/api")
 app.include_router(simulator_router, prefix="/api")
 app.include_router(policies_router, prefix="/api")
 
-# Webhooks router (added in Phase 11)
-# from backend.api.webhooks import router as webhooks_router
-# app.include_router(webhooks_router)
+from backend.api.webhooks import router as webhooks_router
+app.include_router(webhooks_router)

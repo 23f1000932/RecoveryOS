@@ -122,3 +122,13 @@ class DecisionProposal:
     model_name: str
     model_version: str
     policy_version: str
+
+    # ── Phase 6: Execution + Verification (optional) ──────────────────────────
+    # Populated only when execute=True is passed to RecoveryPipeline.process_case().
+    # None when pipeline runs in analysis-only mode (the default).
+    action_result: object | None = None       # ActionResult from tools adapter
+    verification_result: object | None = None  # VerificationResult from verification adapter
+    actual_recovered: Decimal = Decimal("0")
+    incremental_recovery: Decimal = Decimal("0")
+    net_incremental_recovery: Decimal = Decimal("0")
+    executed: bool = False
