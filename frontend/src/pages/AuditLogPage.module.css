@@ -1,23 +1,158 @@
-/* Audit Log Page Styles */
-.page { min-height: 100vh; }
-.content { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 2rem; }
+/* RecoveryOS — AuditLogPage Styles (Phase 7) */
 
-.notice { padding: 1.5rem; }
-.notice .label-mono { margin-bottom: 0.75rem; color: var(--accent); }
-.noticeText { font-family: var(--font-sans); font-size: 0.9375rem; line-height: 1.7; color: var(--muted-foreground); }
-.noticeText a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
-
-.legend { display: flex; flex-direction: column; gap: 1rem; }
-.legendTitle { }
-.legendGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.75rem; }
-.legendEntry { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 0.25rem; }
-.eventType {
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--accent);
-  background: var(--accent-muted);
-  padding: 0.2rem 0.4rem;
-  border-radius: var(--radius-sm);
-  align-self: flex-start;
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 0 48px;
 }
-.eventDesc { font-family: var(--font-sans); font-size: 0.875rem; color: var(--muted-foreground); line-height: 1.4; }
+
+.loadingState {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid hsl(0, 0%, 20%);
+  border-top-color: hsl(35, 85%, 60%);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Timeline container ──────────────────────────────────────────────────── */
+
+.timeline {
+  position: relative;
+  padding-left: 20px;
+}
+
+.rail {
+  position: absolute;
+  left: 3px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: hsl(0, 0%, 13%);
+  border-radius: 1px;
+}
+
+.entries {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Single entry ────────────────────────────────────────────────────────── */
+
+.entry {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid hsl(0, 0%, 11%);
+}
+
+.entry[open] {
+  border-color: hsl(0, 0%, 18%);
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: hsl(0, 0%, 8%);
+  cursor: pointer;
+  list-style: none;
+  transition: background 0.15s;
+}
+
+.summary::-webkit-details-marker { display: none; }
+
+.summary:hover {
+  background: hsl(0, 0%, 11%);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: -23px; /* align with rail */
+  box-shadow: 0 0 0 3px hsl(0, 0%, 8%);
+}
+
+.summaryMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.eventLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: hsl(0, 0%, 85%);
+}
+
+.eventMeta {
+  font-size: 11px;
+  color: hsl(0, 0%, 40%);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timestamp {
+  font-size: 11px;
+  color: hsl(0, 0%, 40%);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ── Expanded body ───────────────────────────────────────────────────────── */
+
+.body {
+  background: hsl(0, 0%, 5%);
+  padding: 14px 16px;
+  border-top: 1px solid hsl(0, 0%, 11%);
+}
+
+.snapshotRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.snapshot {
+  flex: 1;
+  min-width: 220px;
+}
+
+.snapshotLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: hsl(0, 0%, 40%);
+  margin: 0 0 6px;
+}
+
+.snapshotPre {
+  font-size: 11px;
+  color: hsl(0, 0%, 65%);
+  background: hsl(0, 0%, 7%);
+  border-radius: 6px;
+  padding: 10px 12px;
+  overflow-x: auto;
+  max-height: 200px;
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1.5;
+}

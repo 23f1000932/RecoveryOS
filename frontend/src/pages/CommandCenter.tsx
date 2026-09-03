@@ -9,7 +9,9 @@
  * Phase 1 shows the layout skeleton with loading states.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { ErrorBanner } from '../components/layout/ErrorBanner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api, formatINR, formatPercent } from '../services/api';
 import type { DashboardSummary } from '../types';
@@ -49,39 +51,52 @@ export function CommandCenter() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
+  const load = (silent = false) => {
+    if (!silent) setLoading(true);
     api.getDashboardSummary()
       .then((data) => {
-        if (!cancelled) {
-          setSummary(data);
-          setLoading(false);
-        }
+        setSummary(data);
+        setLastRefreshed(new Date());
+        if (!silent) setLoading(false);
       })
       .catch((err) => {
-        if (!cancelled) {
-          setError(err.message ?? 'Failed to load dashboard');
-          setLoading(false);
-        }
+        setError(err.message ?? 'Failed to load dashboard');
+        if (!silent) setLoading(false);
       });
+  };
 
-    return () => { cancelled = true; };
+  useEffect(() => {
+    load();
+    timerRef.current = setInterval(() => load(true), 30_000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pending = summary?.pending_approval_count ?? 0;
+
+  // Mini chart data: Baseline vs AI (from last experiment if available)
+  const comparisonData = summary ? [
+    { name: 'Baseline', value: parseFloat(summary.baseline_recovered) || 0, fill: 'hsl(210,50%,45%)' },
+    { name: 'AI Recovered', value: parseFloat(summary.revenue_recovered) || 0, fill: 'hsl(35,85%,60%)' },
+    { name: 'Net Increment', value: parseFloat(summary.net_incremental_recovery) || 0, fill: 'hsl(140,50%,45%)' },
+  ] : [];
 
   return (
     <div className={`animate-enter ${styles.page}`}>
       <PageHeader
         label="Command Center"
         title="Revenue Recovery Overview"
-        subtitle="Real-time financial impact of AI-powered payment recovery"
+        subtitle={
+          lastRefreshed
+            ? `Real-time financial impact · Last updated ${lastRefreshed.toLocaleTimeString()}`
+            : 'Real-time financial impact of AI-powered payment recovery'
+        }
         actions={
           pending > 0 ? (
-            <a href="/recovery-queue?status=PENDING_APPROVAL" className="btn btn--primary" id="btn-pending-approvals">
+            <a href="/recovery-queue" className="btn btn--primary" id="btn-pending-approvals">
               {pending} Pending Approval{pending !== 1 ? 's' : ''}
             </a>
           ) : undefined
@@ -90,11 +105,8 @@ export function CommandCenter() {
 
       <div className={styles.content}>
         {error && (
-          <div className={`card ${styles.errorCard}`} role="alert">
-            <p>{error}</p>
-            <button className="btn btn--secondary" onClick={() => window.location.reload()}>
-              Retry
-            </button>
+          <div style={{ marginBottom: 16 }}>
+            <ErrorBanner message={error} onRetry={() => load()} />
           </div>
         )}
 
@@ -182,14 +194,42 @@ export function CommandCenter() {
 
         <hr className="editorial-rule" />
 
-        {/* Phase 10 placeholder for charts */}
-        <section className={styles.section} aria-label="Recovery trend charts (Phase 10)">
-          <p className={`label-mono ${styles.sectionLabel}`}>Recovery Trends</p>
-          <div className={styles.chartPlaceholder}>
-            <p className={styles.chartPlaceholderText}>
-              Recovery trend charts — Recharts visualizations wired in Phase 10
+        {/* ── Recovery Comparison Chart ── */}
+        <section className={styles.section} aria-label="Recovery comparison chart">
+          <p className={`label-mono ${styles.sectionLabel}`}>Recovery Comparison</p>
+          {comparisonData.length > 0 && (
+            <div style={{ height: 200 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={comparisonData} margin={{ top: 4, right: 16, bottom: 4, left: 16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,14%)" vertical={false} />
+                  <XAxis dataKey="name" tick={{ fill: '#888', fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis
+                    tick={{ fill: '#666', fontSize: 11 }}
+                    tickFormatter={(v) => `₹${(v/1000).toFixed(0)}K`}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    formatter={(v: number) => [
+                      new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v),
+                      ''
+                    ]}
+                    contentStyle={{ background: 'hsl(0,0%,10%)', border: '1px solid hsl(0,0%,18%)', borderRadius: 8, fontSize: 13 }}
+                  />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {comparisonData.map((entry) => (
+                      <Cell key={entry.name} fill={entry.fill} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+          {!comparisonData.length && !loading && (
+            <p style={{ color: 'hsl(0,0%,40%)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>
+              Run a simulator experiment to see the comparison chart.
             </p>
-          </div>
+          )}
         </section>
       </div>
     </div>
