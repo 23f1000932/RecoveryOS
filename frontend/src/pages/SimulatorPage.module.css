@@ -1,21 +1,230 @@
-/* Simulator Page Styles */
-.page { min-height: 100vh; }
-.content { padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
-.configCard { padding: 1.75rem; }
-.configLabel { margin-bottom: 1rem; }
-.configRow { display: flex; gap: 1.5rem; align-items: flex-end; flex-wrap: wrap; }
-.fieldGroup { display: flex; flex-direction: column; gap: 0.5rem; }
-.numberInput { width: 160px; }
-.configNote { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted-foreground); margin-top: 1.25rem; line-height: 1.6; }
-.notice { padding: 1.25rem; color: var(--muted-foreground); font-family: var(--font-mono); font-size: 0.875rem; }
-.results { display: flex; flex-direction: column; gap: 1rem; }
-.resultsLabel { }
-.compareGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
-.compareCard { padding: 1.5rem; }
-.compareTitle { margin-bottom: 0.5rem; }
-.compareValue { font-size: 1.75rem; letter-spacing: -0.03em; margin-bottom: 0.25rem; }
-.compareRate { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted-foreground); }
-.guardrailStats { display: flex; gap: 2rem; flex-wrap: wrap; padding: 1rem 0; border-top: 1px solid var(--border); }
-.placeholder { padding: 3rem; text-align: center; }
-.placeholderText { font-family: var(--font-serif); font-size: 1.25rem; margin-bottom: 0.5rem; }
-.placeholderHint { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--muted-foreground); }
+/* RecoveryOS — SimulatorPage Styles (Phase 7) */
+
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 0 48px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Config card ─────────────────────────────────────────────────────────── */
+
+.configCard {
+  margin-bottom: 16px;
+}
+
+.configLabel {
+  margin-bottom: 20px;
+}
+
+.configRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.numberInput {
+  width: 140px;
+}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+
+.progressBar {
+  margin-top: 16px;
+  height: 4px;
+  background: hsl(0, 0%, 15%);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, hsl(35, 80%, 55%), hsl(35, 90%, 68%));
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.pollingHint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: hsl(0, 0%, 50%);
+}
+
+/* ── Results header ──────────────────────────────────────────────────────── */
+
+.resultsHeader {
+  margin-bottom: 20px;
+}
+
+.policyLine {
+  font-size: 12px;
+  color: hsl(0, 0%, 45%);
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── Metric pairs ────────────────────────────────────────────────────────── */
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 700px) {
+  .metricGrid { grid-template-columns: 1fr; }
+}
+
+.metricPair {
+  background: hsl(0, 0%, 8%);
+  border: 1px solid hsl(0, 0%, 13%);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.metricPairHighlight {
+  border-color: hsl(35, 60%, 25%);
+  background: hsl(35, 40%, 6%);
+}
+
+.pairLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: hsl(0, 0%, 45%);
+  margin: 0 0 10px;
+}
+
+.pairRow {
+  display: flex;
+  gap: 16px;
+}
+
+.pairCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pairTag {
+  font-size: 10px;
+  color: hsl(0, 0%, 40%);
+  margin: 0;
+}
+
+.pairValue {
+  font-size: 15px;
+  font-weight: 700;
+  color: hsl(0, 0%, 88%);
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+}
+
+/* ── Incremental row ─────────────────────────────────────────────────────── */
+
+.incrementalRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 600px) {
+  .incrementalRow { grid-template-columns: 1fr; }
+}
+
+.incrementalCard {
+  background: hsl(0, 0%, 7%);
+  border: 1px solid hsl(0, 0%, 13%);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.incrementalNet {
+  border-color: hsl(140, 40%, 18%);
+  background: hsl(140, 20%, 5%);
+}
+
+.incLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: hsl(0, 0%, 45%);
+  margin: 0 0 6px;
+}
+
+.incValue {
+  font-size: 22px;
+  font-weight: 800;
+  color: hsl(0, 0%, 90%);
+  font-family: 'JetBrains Mono', monospace;
+  margin: 0;
+}
+
+/* ── Guardrail stats ─────────────────────────────────────────────────────── */
+
+.guardrailStats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  color: hsl(0, 0%, 50%);
+}
+
+/* ── History list ────────────────────────────────────────────────────────── */
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.historyRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 12px;
+  background: hsl(0, 0%, 7%);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid hsl(0, 0%, 12%);
+}
+
+.historyRow:hover {
+  background: hsl(0, 0%, 10%);
+}
+
+.historyId {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: hsl(35, 70%, 55%);
+}
+
+.historyMeta {
+  font-size: 12px;
+  color: hsl(0, 0%, 50%);
+  flex: 1;
+}
+
+.historyNet {
+  font-size: 13px;
+  font-weight: 700;
+  color: hsl(140, 50%, 60%);
+  font-family: 'JetBrains Mono', monospace;
+}
