@@ -2,7 +2,6 @@
  * RecoveryOS — Bitcoin DeFi Sidebar Navigation
  */
 
-import React from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -10,7 +9,6 @@ import {
   Cpu,
   ShieldCheck,
   FileCode2,
-  Activity,
   Zap,
 } from "lucide-react";
 import styles from "./Sidebar.module.css";

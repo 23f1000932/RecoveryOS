@@ -11,7 +11,8 @@ import {
   CheckCircle2,
   ShieldAlert,
 } from "lucide-react";
-import { ALL_BADGES, HunterBadge, HunterState } from "../../services/gamification";
+import { ALL_BADGES } from "../../services/gamification";
+import type { HunterBadge, HunterState } from "../../services/gamification";
 
 interface TrophyModalProps {
   isOpen: boolean;

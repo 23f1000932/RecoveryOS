@@ -2,7 +2,7 @@
  * RecoveryOS — Command Center (Bitcoin DeFi Aesthetic & Gamified Mining Rig)
  */
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Bar,
@@ -15,7 +15,6 @@ import {
   YAxis,
 } from "recharts";
 import {
-  Zap,
   Flame,
   ShieldCheck,
   TrendingUp,

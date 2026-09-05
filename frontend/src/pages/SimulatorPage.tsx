@@ -113,8 +113,9 @@ export function SimulatorPage() {
         setHistory((h) => [res, ...h.filter((x) => x.experiment_id !== res.experiment_id)].slice(0, 4));
 
         // Gamification check: Award XP and Badge if positive alpha
-        if (res.net_incremental_recovery > 0) {
-          gamification.addXP(400, "Hashrate Surge Completed", res.net_incremental_recovery);
+        const netAlpha = parseFloat(res.net_incremental_recovery) || 0;
+        if (netAlpha > 0) {
+          gamification.addXP(400, "Hashrate Surge Completed", netAlpha);
           gamification.unlockBadge("HASHRATE_SURGE");
           gamification.incrementStreak();
           gamification.fireCelebration(true);
@@ -323,7 +324,7 @@ export function SimulatorPage() {
                 </p>
               </div>
 
-              {result.net_incremental_recovery > 0 && (
+              {parseFloat(result.net_incremental_recovery) > 0 && (
                 <div className={styles.alphaBanner}>
                   <Coins size={15} />
                   <span>NET ALPHA GENERATED: +{formatINR(result.net_incremental_recovery)}</span>

@@ -2,13 +2,14 @@
  * RecoveryOS — App Layout Shell with Bitcoin DeFi Atmosphere & Gamification
  */
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { HunterHUD } from "../gamification/HunterHUD";
 import { TrophyModal } from "../gamification/TrophyModal";
 import { XPToast } from "../gamification/XPToast";
-import { gamification, HunterState } from "../../services/gamification";
+import { gamification } from "../../services/gamification";
+import type { HunterState } from "../../services/gamification";
 import styles from "./AppLayout.module.css";
 
 export function AppLayout() {

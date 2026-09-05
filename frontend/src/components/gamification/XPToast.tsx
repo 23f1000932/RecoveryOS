@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Sparkles, Flame, Trophy } from "lucide-react";
-import { gamification, XPToastEvent } from "../../services/gamification";
+import { gamification } from "../../services/gamification";
+import type { XPToastEvent } from "../../services/gamification";
 
 export const XPToast: React.FC = () => {
   const [toasts, setToasts] = useState<XPToastEvent[]>([]);

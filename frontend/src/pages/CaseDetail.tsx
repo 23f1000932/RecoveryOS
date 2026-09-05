@@ -27,7 +27,6 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
-  Flame,
 } from 'lucide-react';
 import { ActionBarChart } from '../components/charts/ActionBarChart';
 import { CaseStatusBadge, ActionBadge, ApprovalBadge } from '../components/controls/StatusBadge';
@@ -445,9 +444,10 @@ export function CaseDetailPage() {
                       () => api.approveCase(caseId!),
                       'Multi-sig consensus confirmed. Case approved for execution.',
                       () => {
-                        gamification.addXP(150, "Multi-Sig Consensus Approved", caseData.payment_amount);
+                        const amount = parseFloat(caseData.payment_amount) || 0;
+                        gamification.addXP(150, "Multi-Sig Consensus Approved", amount);
                         gamification.incrementStreak();
-                        if (caseData.payment_amount >= 10000) {
+                        if (amount >= 10000) {
                           gamification.unlockBadge("WHALE_SAVER");
                         }
                         gamification.unlockBadge("ZERO_BREACH");
@@ -489,7 +489,8 @@ export function CaseDetailPage() {
                       () => api.executeCase(caseId!),
                       'Recovery action adapter deployed successfully.',
                       () => {
-                        gamification.addXP(200, "Lightning Recovery Action Executed", caseData.payment_amount);
+                        const amount = parseFloat(caseData.payment_amount) || 0;
+                        gamification.addXP(200, "Lightning Recovery Action Executed", amount);
                         gamification.unlockBadge("LIGHTNING_EXECUTE");
                         gamification.fireCelebration(true);
                       },

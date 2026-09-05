@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Award, Flame, Zap, Shield, Sparkles } from "lucide-react";
-import { gamification, HunterState } from "../../services/gamification";
+import { Award, Flame } from "lucide-react";
+import { gamification } from "../../services/gamification";
+import type { HunterState } from "../../services/gamification";
 
 interface HunterHUDProps {
   onOpenTrophies: () => void;

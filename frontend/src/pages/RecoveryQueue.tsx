@@ -14,13 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   RotateCcw,
   Search,
-  SlidersHorizontal,
   ShieldAlert,
-  ArrowRight,
-  Zap,
-  CheckCircle2,
-  Clock,
-  Layers,
 } from 'lucide-react';
 import { CaseStatusBadge, ActionBadge } from '../components/controls/StatusBadge';
 import { EmptyState } from '../components/layout/EmptyState';

@@ -173,14 +173,18 @@ class GamificationManager {
     return { ...this.state };
   }
 
-  public subscribe(fn: (state: HunterState) => void) {
+  public subscribe(fn: (state: HunterState) => void): () => void {
     this.listeners.add(fn);
-    return () => this.listeners.delete(fn);
+    return () => {
+      this.listeners.delete(fn);
+    };
   }
 
-  public onToast(fn: (toast: XPToastEvent) => void) {
+  public onToast(fn: (toast: XPToastEvent) => void): () => void {
     this.toastListeners.add(fn);
-    return () => this.toastListeners.delete(fn);
+    return () => {
+      this.toastListeners.delete(fn);
+    };
   }
 
   public addXP(baseXP: number, reason: string, bountyAmount: number = 0) {
