@@ -50,8 +50,16 @@ app.add_middleware(
 @app.on_event("startup")
 async def on_startup() -> None:
     logger.info("RecoveryOS starting up — environment: %s", settings.environment)
-    await init_db()
-    logger.info("Startup complete.")
+    try:
+        await init_db()
+        logger.info("Startup complete — database connected.")
+    except Exception as exc:  # noqa: BLE001
+        logger.warning(
+            "Database connection failed at startup: %s. "
+            "Server will start without DB — all DB-dependent endpoints will "
+            "return empty responses (Rule 4: Safe failure).",
+            exc,
+        )
 
 
 @app.on_event("shutdown")

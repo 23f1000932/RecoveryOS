@@ -161,37 +161,36 @@ async def seed():
         logger.info("Seeding demo webhook event (Case E dedup demo)…")
         await conn.execute("""
             INSERT INTO webhook_events (
-                event_id, payment_id, event_type, processing_status, raw_payload
+                external_event_id, event_type, processing_status, payload, signature_valid
             ) VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (event_id) DO NOTHING
+            ON CONFLICT (external_event_id) DO NOTHING
         """,
             WEBHOOK_EVENT_E,
-            "pay_demo_case_e",
             "payment.failed",
             "processed",
             '{"id": "demo-webhook-evt-00000000000000001", "entity": "event", "event": "payment.failed"}',
+            True,
         )
 
         # ── Audit events for seeded cases ─────────────────────────────────────
         logger.info("Seeding audit events…")
         audit_events = [
-            (CASE_A, "payment_failed",           "webhook",   "system"),
-            (CASE_A, "context_loaded",           "pipeline",  "recoveryos"),
-            (CASE_A, "predictions_generated",    "pipeline",  "recoveryos"),
-            (CASE_A, "optimization_completed",   "pipeline",  "recoveryos"),
-            (CASE_A, "guardrail_passed",         "pipeline",  "recoveryos"),
-            (CASE_B, "payment_failed",           "webhook",   "system"),
-            (CASE_B, "optimization_completed",   "pipeline",  "recoveryos"),
-            (CASE_D, "payment_failed",           "webhook",   "system"),
-            (CASE_D, "approval_requested",       "pipeline",  "recoveryos"),
+            (CASE_A, "payment_failed",           "system",    "webhook"),
+            (CASE_A, "context_loaded",           "recoveryos","pipeline"),
+            (CASE_A, "predictions_generated",    "recoveryos","pipeline"),
+            (CASE_A, "optimization_completed",   "recoveryos","pipeline"),
+            (CASE_A, "guardrail_passed",         "recoveryos","pipeline"),
+            (CASE_B, "payment_failed",           "system",    "webhook"),
+            (CASE_B, "optimization_completed",   "recoveryos","pipeline"),
+            (CASE_D, "payment_failed",           "system",    "webhook"),
+            (CASE_D, "approval_requested",       "recoveryos","pipeline"),
         ]
-        for case_id, event_type, source, actor in audit_events:
+        for case_id, event_type, actor, source in audit_events:
             await conn.execute("""
-                INSERT INTO audit_logs (id, case_id, event_type, source, actor, input_snapshot, output_snapshot)
+                INSERT INTO audit_logs (id, case_id, event_type, actor, source, input_snapshot, output_snapshot)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
-                ON CONFLICT DO NOTHING
             """,
-                str(uuid.uuid4()), case_id, event_type, source, actor, "{}", "{}",
+                str(uuid.uuid4()), case_id, event_type, actor, source, "{}", "{}",
             )
 
     logger.info(

@@ -62,12 +62,42 @@ async def init_db() -> None:
             "postgresql+asyncpg://", "postgresql://"
         ).replace("postgresql+psycopg2://", "postgresql://")
 
+        # Parse the URL manually using regex to work around Python 3.13's
+        # stricter urllib.parse that rejects Supabase pooler hostnames.
+        # Format: postgresql://user:pass@host:port/dbname[?query]
+        import re
+        _URL_RE = re.compile(
+            r"postgresql(?:\+\w+)?://"
+            r"(?P<user>[^:]+):(?P<pass>.+?)@"
+            r"(?P<host>[^/:@]+):(?P<port>\d+)"
+            r"/(?P<db>[^?]+)"
+        )
+        m = _URL_RE.match(url)
+        if not m:
+            raise ValueError(f"Cannot parse DATABASE_URL. Expected: postgresql://user:pass@host:port/db")
+
+        db_user = m.group("user")
+        db_pass = m.group("pass")
+        db_host = m.group("host")
+        db_port = int(m.group("port"))
+        db_name = m.group("db")
+
+        # Supabase connection pooler (transaction mode) requires:
+        #   - ssl='require'  — TLS mandatory on pooler endpoint
+        #   - statement_cache_size=0  — pooler doesn't support prepared statements
         _pool = await asyncpg.create_pool(
-            dsn=url,
-            min_size=2,
+            host=db_host,
+            port=db_port,
+            user=db_user,
+            password=db_pass,
+            database=db_name,
+            min_size=1,
             max_size=10,
             command_timeout=30,
+            ssl="require",
+            statement_cache_size=0,
         )
+
         logger.info("Database connection pool initialized.")
     except Exception as exc:
         logger.error("Failed to initialize database pool: %s", exc)
