@@ -99,6 +99,20 @@ async def init_db() -> None:
         )
 
         logger.info("Database connection pool initialized.")
+
+        # Ensure schema migrations are applied
+        try:
+            async with _pool.acquire() as conn:
+                await conn.execute(
+                    """
+                    ALTER TABLE experiment_runs
+                    ADD COLUMN IF NOT EXISTS approvals_required INT NOT NULL DEFAULT 0;
+                    ALTER TABLE experiment_cases
+                    DROP CONSTRAINT IF EXISTS experiment_cases_case_id_fkey;
+                    """
+                )
+        except Exception as mig_err:
+            logger.warning("Auto-migration notice: %s", mig_err)
     except Exception as exc:
         logger.error("Failed to initialize database pool: %s", exc)
         raise
