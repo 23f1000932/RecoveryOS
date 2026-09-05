@@ -25,8 +25,7 @@ import numpy as np
 import pandas as pd
 
 from ml.features import (
-    FEATURE_COLUMNS,
-    PROBABILITY_COLUMNS,
+    ALL_DATASET_COLUMNS,
     encode_failure_code,
     encode_method,
 )
@@ -228,18 +227,13 @@ def generate_dataset(rows: int = 10_000, seed: int = 42) -> pd.DataFrame:
     df = pd.concat([df.reset_index(drop=True), outcomes_df], axis=1)
 
     # Step 7: Enforce column ordering
-    final_columns = (
-        ["case_id", "customer_id"]
-        + [
-            "customer_transaction_count", "customer_success_count",
-            "customer_failure_count", "customer_success_rate",
-            "customer_avg_amount", "preferred_method",
-        ]
-        + FEATURE_COLUMNS
-        + PROBABILITY_COLUMNS
-        + ["payment_method", "failure_code"]
-    )
-    df = df[final_columns]
+    # ALL_DATASET_COLUMNS is the single source of truth for the dataset schema
+    # (coding rule 13). It is deduplicated at definition, so the customer_*
+    # aggregates — which appear in both the helper block and FEATURE_COLUMNS —
+    # yield one column each. Selecting a name twice here would make
+    # df["customer_success_rate"] return a 2-column frame instead of a Series,
+    # forcing every consumer to work around it.
+    df = df[ALL_DATASET_COLUMNS]
 
     return df.reset_index(drop=True)
 

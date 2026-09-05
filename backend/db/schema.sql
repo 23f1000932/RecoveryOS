@@ -176,6 +176,10 @@ CREATE TABLE IF NOT EXISTS experiment_runs (
     guardrail_stops          INT NOT NULL DEFAULT 0,
     escalations              INT NOT NULL DEFAULT 0,
     do_nothing_count         INT NOT NULL DEFAULT 0,
+    -- Cases the guardrail engine routed to human approval. The simulator has no
+    -- human, so it models approval as granted; this column is what makes the
+    -- resulting operational load visible instead of hidden inside the headline.
+    approvals_required       INT NOT NULL DEFAULT 0,
     created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -186,7 +190,11 @@ CREATE INDEX IF NOT EXISTS idx_experiment_runs_created_at ON experiment_runs(cre
 CREATE TABLE IF NOT EXISTS experiment_cases (
     id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     experiment_id       UUID NOT NULL REFERENCES experiment_runs(id) ON DELETE CASCADE,
-    case_id             UUID NOT NULL REFERENCES recovery_cases(id) ON DELETE CASCADE,
+    -- Deliberately NOT a foreign key to recovery_cases. Simulator cases are
+    -- synthetic rows produced by ml/generate_data.py; they never exist in
+    -- recovery_cases, and inserting them there would put hundreds of fake cases
+    -- into the queue and dashboard counts.
+    case_id             UUID NOT NULL,
     baseline_action     TEXT NOT NULL,
     baseline_success    BOOLEAN NOT NULL DEFAULT FALSE,
     baseline_recovered  NUMERIC(12,2) NOT NULL DEFAULT 0.00,

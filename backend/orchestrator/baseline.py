@@ -17,9 +17,10 @@ Architecture spec (§11):
     "Its purpose is to provide a stable comparison."
 
 The baseline always selects retry_now. It consults the latent potential
-outcome (p_retry_now from the synthetic dataset) to determine success.
-This is the same p_retry_now that RecoveryOS also has access to —
-guaranteeing counterfactual validity (same potential outcome environment).
+outcome (p_retry_now from the synthetic dataset) together with the case's
+shared uniform draw to determine success. RecoveryOS is evaluated against
+that same draw — guaranteeing counterfactual validity (one shared potential
+outcome environment). See backend/domain/simulation.py.
 """
 
 from __future__ import annotations
@@ -67,6 +68,7 @@ class BaselinePolicy:
         self,
         payment_amount: Decimal,
         p_retry_now: float,
+        uniform_draw: float,
     ) -> BaselineResult:
         """
         Evaluate the baseline policy for a single case.
@@ -74,25 +76,28 @@ class BaselinePolicy:
         Args:
             payment_amount: The failed payment amount (INR).
             p_retry_now:    The latent potential outcome for retry_now.
-                            This is the pre-baked probability from the
-                            synthetic dataset — deterministic given the seed.
+                            Pre-baked probability from the synthetic dataset.
+            uniform_draw:   The case's shared uniform draw u ∈ [0, 1), from
+                            backend.domain.simulation.derive_uniform_draw().
+                            RecoveryOS is evaluated against this same u, so both
+                            arms resolve in one shared world (§10.3).
 
         Returns:
             BaselineResult with always-retry_now action, success/fail,
             recovered amount, and zero cost.
 
         Note:
-            The baseline does NOT sample a new random outcome.
-            It uses p_retry_now as a deterministic threshold:
-            success = (p_retry_now >= 0.5).
+            The baseline does NOT draw its own random number. It receives the
+            case's shared draw and compares it against p_retry_now:
 
-            This is the correct counterfactual approach — the same threshold
-            is applied consistently, ensuring that baseline and AI are
-            evaluated on the exact same potential outcome environment.
+                success = (u < p_retry_now)
+
+            This is the common-random-numbers construction — see
+            backend/domain/simulation.py for why a per-arm draw (different
+            worlds) and a fixed 0.5 threshold (biased rates) are both wrong.
         """
-        # Deterministic: success if latent probability exceeds 50% threshold.
-        # We do NOT re-sample — that would break counterfactual validity.
-        success = p_retry_now >= 0.5
+        # Potential outcome Y(retry_now) under the case's shared draw.
+        success = uniform_draw < p_retry_now
 
         recovered = payment_amount if success else Decimal("0")
 

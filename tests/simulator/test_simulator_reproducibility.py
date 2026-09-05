@@ -8,6 +8,10 @@ Architecture §35 Simulator requirements:
   - incremental_recovery = ai_recovered - baseline_recovered
   - net_incremental_recovery = incremental_recovery - ai_cost
 
+These tests cover the dataset and the two evaluators in isolation. The full loop
+is covered by test_experiment_reproducibility.py — the two files together are
+what make the north-star metric verifiable.
+
 All tests run without DB or external APIs.
 Uses RuleBasedRecoveryModel for determinism (no Gemini, no rate-limit issues in CI).
 
@@ -17,16 +21,17 @@ Run with:
 
 from __future__ import annotations
 
-import uuid
 from decimal import Decimal
 
 import pytest
 
 from backend.domain.enums import ActionType, ExecutionMode, PipelineSource
+from backend.domain.simulation import SimulationOutcome
 from backend.ml_models.rule_based import RuleBasedRecoveryModel
 from backend.orchestrator.baseline import BaselinePolicy
-from backend.orchestrator.context import CaseContext, RecoveryPolicy
+from backend.orchestrator.context import RecoveryPolicy
 from backend.orchestrator.recovery_pipeline import RecoveryPipeline
+from simulator.experiment import build_context
 
 
 DEMO_POLICY = RecoveryPolicy(
@@ -53,43 +58,6 @@ def _make_pipeline() -> RecoveryPipeline:
     )
 
 
-def _dedup_df(df):
-    """generate_dataset() has duplicate column names — keep the last occurrence."""
-    return df.loc[:, ~df.columns.duplicated(keep='last')]
-
-
-def _row_to_context(row, policy: RecoveryPolicy, case_id: str | None = None) -> CaseContext:
-    """Convert a generate_dataset() DataFrame row to a CaseContext."""
-    def _s(col, default=None):
-        """Scalar accessor — safe for Series with duplicate index names."""
-        val = row[col] if col in row.index else default
-        if hasattr(val, 'iloc'):  # still a Series (duplicate col)
-            return val.iloc[-1]   # take the last one (post-merge columns)
-        return val
-
-    return CaseContext(
-        case_id=str(case_id or str(uuid.uuid4())),
-        payment_id=str(uuid.uuid4()),
-        customer_id=str(uuid.uuid4()),
-        merchant_id="00000000-0000-0000-0000-000000000001",
-        amount=Decimal(str(float(_s("amount", 1000)))),
-        currency="INR",
-        method=str(_s("payment_method", "card")),
-        failure_code=str(_s("failure_code", "card_declined")),
-        attempt_number=int(_s("attempt_number", 1)),
-        customer_success_rate=float(_s("customer_success_rate", 0.70)),
-        customer_transaction_count=int(_s("customer_transaction_count", 10)),
-        customer_success_count=int(_s("customer_success_count", 7)),
-        customer_failure_count=int(_s("customer_failure_count", 3)),
-        customer_avg_amount=Decimal(str(float(_s("customer_avg_amount", 1000)))),
-        time_since_failure_hours=float(_s("time_since_failure_hours", 1.0)),
-        hour_of_day=int(_s("hour_of_day", 12)),
-        day_of_week=int(_s("day_of_week", 1)),
-        previous_failure_count=int(_s("customer_failure_count", 1)),
-        policy=policy,
-    )
-
-
 class TestSimulatorReproducibility:
     """
     Architecture §35: 'same seed → same dataset → same baseline and AI metrics.'
@@ -111,10 +79,21 @@ class TestSimulatorReproducibility:
 
         # Key financial and categorical columns must be bit-identical
         for col in ["amount", "customer_success_rate", "payment_method", "failure_code"]:
-            if col in df1.columns:
-                assert df1[col].equals(df2[col]), (
-                    f"Column '{col}' is not identical across calls with seed=42"
-                )
+            assert df1[col].equals(df2[col]), (
+                f"Column '{col}' is not identical across calls with seed=42"
+            )
+
+    def test_dataset_columns_are_unique(self):
+        """
+        No duplicate column labels — otherwise df["customer_success_rate"] returns
+        a 2-column frame and every consumer needs a workaround. The schema is
+        deduplicated once, in ml/features.py::ALL_DATASET_COLUMNS.
+        """
+        from ml.generate_data import generate_dataset
+
+        columns = list(generate_dataset(rows=5, seed=42).columns)
+        duplicated = sorted({c for c in columns if columns.count(c) > 1})
+        assert duplicated == [], f"Duplicate column labels: {duplicated}"
 
     def test_different_seeds_produce_different_datasets(self):
         """
@@ -144,7 +123,8 @@ class TestSimulatorReproducibility:
             "amount", "payment_method", "failure_code",
             "attempt_number", "customer_success_rate",
             "customer_transaction_count", "customer_failure_count",
-            "customer_avg_amount",
+            "customer_avg_amount", "time_since_failure_hours",
+            "hour_of_day", "day_of_week", "previous_failure_count",
         ]
         for col in required:
             assert col in df.columns, (
@@ -155,28 +135,29 @@ class TestSimulatorReproducibility:
     async def test_baseline_and_ai_evaluated_on_same_batch(self):
         """
         Architecture §11: 'Baseline and RecoveryOS must be evaluated on the same batch.'
-        Validates that the same rows feed both evaluators.
+        Validates that the same rows — and the same uniform draws — feed both evaluators.
         """
         from ml.generate_data import generate_dataset
 
         SEED = 42
         ROWS = 10
-        df = _dedup_df(generate_dataset(rows=ROWS, seed=SEED))
+        df = generate_dataset(rows=ROWS, seed=SEED)
 
         pipeline = _make_pipeline()
         baseline_results = []
         ai_proposals = []
 
-        for i, (_, row) in enumerate(df.iterrows()):
-            case_id = f"repro-{i}"
-            context = _row_to_context(row, DEMO_POLICY, case_id=case_id)
+        for row_index, (_, row) in enumerate(df.iterrows()):
+            context = build_context(row, DEMO_POLICY)
+            outcome = SimulationOutcome.from_row(row, row_index=row_index, seed=SEED)
 
-            # Baseline: deterministic threshold-based evaluation
-            p_retry = float(row.get("p_retry_now", row["customer_success_rate"]))
-            b_result = BASELINE.evaluate(context.amount, p_retry)
+            b_result = BASELINE.evaluate(
+                payment_amount=context.amount,
+                p_retry_now=outcome.probability_for(ActionType.RETRY_NOW),
+                uniform_draw=outcome.uniform_draw,
+            )
             baseline_results.append(b_result)
 
-            # AI: pipeline
             proposal = await pipeline.process_case(
                 context, source=PipelineSource.SIMULATOR, execute=False
             )
@@ -216,17 +197,21 @@ class TestSimulatorReproducibility:
         ai_total = Decimal("0")
         ai_cost_total = Decimal("0")
 
-        for i, (_, row) in enumerate(df.iterrows()):
-            context = _row_to_context(row, DEMO_POLICY, case_id=f"metrics-{i}")
+        for row_index, (_, row) in enumerate(df.iterrows()):
+            context = build_context(row, DEMO_POLICY)
+            outcome = SimulationOutcome.from_row(row, row_index=row_index, seed=SEED)
 
-            # Baseline: deterministic
-            p_retry = float(row.get("p_retry_now", row["customer_success_rate"]))
-            b_result = BASELINE.evaluate(context.amount, p_retry)
+            b_result = BASELINE.evaluate(
+                payment_amount=context.amount,
+                p_retry_now=outcome.probability_for(ActionType.RETRY_NOW),
+                uniform_draw=outcome.uniform_draw,
+            )
             baseline_total += b_result.recovered_amount
 
             # AI: execute=True in simulation — gets actual_recovered populated
             proposal = await pipeline.process_case(
-                context, source=PipelineSource.SIMULATOR, execute=True
+                context, source=PipelineSource.SIMULATOR, execute=True,
+                outcome=outcome,
             )
             ai_total += proposal.actual_recovered
             if proposal.action_result is not None:
@@ -244,20 +229,20 @@ class TestSimulatorReproducibility:
             f"(ai={ai_total} baseline={baseline_total} cost={ai_cost_total})"
         )
 
-    @pytest.mark.asyncio
-    async def test_baseline_is_deterministic_given_same_input(self):
+    def test_baseline_is_deterministic_given_same_input(self):
         """
-        BaselinePolicy.evaluate() with same inputs → same output.
+        BaselinePolicy.evaluate() with the same (amount, p, u) → same output.
         """
         amount = Decimal("3500")
-        p_retry = 0.72  # above 0.5 → success
+        p_retry = 0.72
+        draw = 0.41  # u < p → recovered
 
-        result1 = BASELINE.evaluate(amount, p_retry)
-        result2 = BASELINE.evaluate(amount, p_retry)
+        result1 = BASELINE.evaluate(amount, p_retry, uniform_draw=draw)
+        result2 = BASELINE.evaluate(amount, p_retry, uniform_draw=draw)
 
         assert result1.action == result2.action == ActionType.RETRY_NOW
-        assert result1.success == result2.success
-        assert result1.recovered_amount == result2.recovered_amount
+        assert result1.success == result2.success is True
+        assert result1.recovered_amount == result2.recovered_amount == amount
 
         # Cost is always 0 for baseline
         assert result1.cost == Decimal("0")
@@ -271,9 +256,9 @@ class TestSimulatorReproducibility:
         pipeline = _make_pipeline()
 
         from ml.generate_data import generate_dataset
-        df = _dedup_df(generate_dataset(rows=1, seed=42))
+        df = generate_dataset(rows=1, seed=42)
         row = df.iloc[0]
-        context = _row_to_context(row, DEMO_POLICY, case_id="determinism-ai-test")
+        context = build_context(row, DEMO_POLICY)
 
         proposal1 = await pipeline.process_case(
             context, source=PipelineSource.SIMULATOR, execute=False

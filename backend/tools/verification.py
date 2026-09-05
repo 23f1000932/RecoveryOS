@@ -7,9 +7,11 @@ Architecture rule (§24):
   "Never infer recovery solely from an action API response."
 
 In SIMULATION mode:
-  - Uses a synthetic Bernoulli draw based on the case's latent probability.
-  - For pipelines that don't store latent probs: assumes success=True for
-    actions that reported success (conservative simulator behaviour).
+  - Resolves the case's pre-baked potential outcome for the action that was
+    actually executed: recovered = (shared_uniform_draw < latent_p_action).
+    See backend/domain/simulation.py for the counterfactual construction.
+  - Callers without a pre-baked outcome (live cases) get a fresh draw against
+    customer_success_rate.
 
 In TEST_MODE:
   - Calls razorpay.payments.fetch(payment_id) and checks status == "captured".
@@ -23,10 +25,11 @@ Rule 4 (Safe failure):
 from __future__ import annotations
 
 import logging
-import random
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING
+
+import numpy as np
 
 from backend.domain.enums import ExecutionMode
 from backend.tools.protocol import VerificationResult
@@ -50,6 +53,8 @@ class VerificationAdapter:
         context: CaseContext,
         action_result_reference: str,
         latent_probability: float | None = None,
+        uniform_draw: float | None = None,
+        execution_mode: ExecutionMode | None = None,
     ) -> VerificationResult:
         """
         Verify actual payment status after action execution.
@@ -59,21 +64,41 @@ class VerificationAdapter:
             context:                   Full CaseContext (has payment_id, amount).
             action_result_reference:   Provider reference from ActionResult
                                        (Razorpay order/link ID or "sim-...").
-            latent_probability:        From synthetic data — used in simulation
-                                       to decide if payment was recovered.
-                                       If None, uses customer_success_rate.
+            latent_probability:        From synthetic data — the latent p for the
+                                       action that was actually executed. Used in
+                                       simulation to decide if payment was
+                                       recovered. If None, falls back to
+                                       customer_success_rate.
+            uniform_draw:              The case's shared uniform draw u ∈ [0, 1)
+                                       (see backend/domain/simulation.py). When
+                                       supplied, recovery is u < latent_probability
+                                       — the same u the baseline was evaluated
+                                       against, which is what makes the A/B
+                                       comparison a true counterfactual (§10.3).
+                                       If None, a fresh draw is taken; that is
+                                       correct for live cases (which have no
+                                       pre-baked outcome) but not reproducible.
+            execution_mode:            Which verification path to take. Pass the
+                                       pipeline's mode explicitly — CaseContext
+                                       has no execution_mode field, so relying on
+                                       it silently pinned every caller to
+                                       SIMULATION and TEST_MODE never reached
+                                       Razorpay.
 
         Returns:
             VerificationResult — never raises.
         """
-        execution_mode = getattr(context, "execution_mode", ExecutionMode.SIMULATION)
+        if execution_mode is None:
+            execution_mode = getattr(context, "execution_mode", ExecutionMode.SIMULATION)
         now_iso = datetime.now(timezone.utc).isoformat()
 
         try:
             if execution_mode == ExecutionMode.TEST_MODE:
                 return await self._verify_razorpay(case_id, context, action_result_reference, now_iso)
             else:
-                return self._verify_simulation(case_id, context, latent_probability, now_iso)
+                return self._verify_simulation(
+                    case_id, context, latent_probability, uniform_draw, now_iso
+                )
         except Exception as exc:
             logger.error("VerificationAdapter: unexpected error case=%s: %s", case_id, exc)
             return VerificationResult(
@@ -89,21 +114,41 @@ class VerificationAdapter:
         case_id: str,
         context: CaseContext,
         latent_probability: float | None,
+        uniform_draw: float | None,
         now_iso: str,
     ) -> VerificationResult:
         """
-        Simulation: Bernoulli draw on the latent probability.
+        Simulation: resolve the potential outcome for the executed action.
 
-        Uses latent_probability if provided (from synthetic dataset),
+        Uses latent_probability if provided (from the synthetic dataset),
         otherwise falls back to customer_success_rate.
+
+        Uses uniform_draw if provided — the case's shared draw, so this result
+        is coupled to the baseline's and reproducible from the seed. Without
+        one, draws fresh entropy (live cases have no pre-baked outcome).
         """
         prob = latent_probability if latent_probability is not None else context.customer_success_rate
-        recovered = random.random() < prob
+
+        if uniform_draw is None:
+            # Live/ad-hoc case: no pre-baked outcome environment to draw from.
+            # Fresh entropy — deliberately not the global `random` module, whose
+            # state is process-wide and would make any caller's results depend
+            # on unrelated calls elsewhere in the process.
+            draw = float(np.random.default_rng().random())
+            logger.debug(
+                "VerificationAdapter [SIM]: case=%s no shared draw supplied — "
+                "using fresh entropy (not reproducible).",
+                case_id,
+            )
+        else:
+            draw = uniform_draw
+
+        recovered = draw < prob
         actual = context.amount if recovered else Decimal("0")
 
         logger.debug(
-            "VerificationAdapter [SIM]: case=%s prob=%.2f recovered=%s",
-            case_id, prob, recovered,
+            "VerificationAdapter [SIM]: case=%s prob=%.4f draw=%.4f recovered=%s",
+            case_id, prob, draw, recovered,
         )
         return VerificationResult(
             payment_recovered=recovered,

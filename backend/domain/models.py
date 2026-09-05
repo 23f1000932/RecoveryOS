@@ -331,4 +331,8 @@ class ExperimentMetrics:
     guardrail_stops: int
     escalations: int
     do_nothing_count: int
+    # Cases the guardrail engine routed to human approval. The simulator models
+    # approval as granted (there is no human in a batch run), so this is the
+    # operational cost of the headline number rather than a deduction from it.
+    approvals_required: int = 0
     created_at: datetime = field(default_factory=datetime.utcnow)

@@ -48,24 +48,26 @@ def build_feature_matrix(df: pd.DataFrame) -> np.ndarray:
         Columns follow FEATURE_COLUMNS order exactly.
 
     Raises:
-        ValueError: If any FEATURE_COLUMNS are missing from df.
-
-    Note on duplicate columns:
-        The synthetic dataset has duplicate column names (e.g. customer_success_rate
-        appears in both the helper block and the feature block). We deduplicate by
-        dropping duplicate column names while keeping the LAST occurrence, which
-        corresponds to the properly encoded feature columns.
+        ValueError: If any FEATURE_COLUMNS are missing from df, or if df
+            carries duplicate column labels (a schema regression — the
+            dataset schema is deduplicated in ml/features.py).
     """
-    # Deduplicate columns — keep last occurrence (the encoded feature columns)
-    df_dedup = df.loc[:, ~df.columns.duplicated(keep="last")]
-
-    missing = [col for col in FEATURE_COLUMNS if col not in df_dedup.columns]
+    missing = [col for col in FEATURE_COLUMNS if col not in df.columns]
     if missing:
         raise ValueError(
             f"Dataset is missing feature columns: {missing}\n"
-            f"Available columns: {list(df_dedup.columns)}"
+            f"Available columns: {list(df.columns)}"
         )
-    return df_dedup[FEATURE_COLUMNS].to_numpy(dtype=np.float64)
+
+    duplicated = sorted({c for c in df.columns if list(df.columns).count(c) > 1})
+    if duplicated:
+        raise ValueError(
+            "Dataset has duplicate column labels, so feature selection would be "
+            f"ambiguous: {duplicated}. ALL_DATASET_COLUMNS is deduplicated — a "
+            "producer other than generate_dataset() built this frame."
+        )
+
+    return df[FEATURE_COLUMNS].to_numpy(dtype=np.float64)
 
 
 def build_label_matrix(df: pd.DataFrame) -> dict[ActionType, np.ndarray]:

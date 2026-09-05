@@ -85,7 +85,24 @@ HELPER_COLUMNS: list[str] = [
 ]
 
 # ── All Columns in a Generated Dataset ────────────────────────────────────────
-ALL_DATASET_COLUMNS: list[str] = (
+# NOTE: the customer_* aggregates appear in both the helper block and
+# FEATURE_COLUMNS. Concatenating the lists naively produced a DataFrame with 5
+# duplicate column labels, which made df["customer_success_rate"] return a
+# 2-column frame instead of a Series — every consumer had to work around it.
+# Deduplicate here, preserving first-seen order, so downstream code can index
+# columns normally.
+def _dedupe(columns: list[str]) -> list[str]:
+    """Drop repeated column names, keeping first-seen order."""
+    seen: set[str] = set()
+    unique: list[str] = []
+    for column in columns:
+        if column not in seen:
+            seen.add(column)
+            unique.append(column)
+    return unique
+
+
+ALL_DATASET_COLUMNS: list[str] = _dedupe(
     ["case_id", "customer_id"]
     + [
         "customer_transaction_count",
