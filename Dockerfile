@@ -36,6 +36,7 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy only what the backend needs; excludes .venv, .git, frontend, tests
 COPY backend/ ./backend/
 COPY ml/ ./ml/
+COPY simulator/ ./simulator/
 COPY policies/ ./policies/
 
 # ── Health check ───────────────────────────────────────────────────────────────

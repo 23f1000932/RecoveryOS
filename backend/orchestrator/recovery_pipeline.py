@@ -45,6 +45,7 @@ from backend.orchestrator.context import CaseContext, DecisionProposal
 
 if TYPE_CHECKING:
     from backend.agents.agent import GeminiAgent
+    from backend.domain.simulation import SimulationOutcome
 
 logger = logging.getLogger(__name__)
 
@@ -179,6 +180,7 @@ class RecoveryPipeline:
         source: PipelineSource = PipelineSource.SIMULATOR,
         approved: bool = False,
         execute: bool = False,
+        outcome: "SimulationOutcome | None" = None,
     ) -> DecisionProposal:
         """
         Run the full 10-stage pipeline for a single recovery case.
@@ -187,6 +189,14 @@ class RecoveryPipeline:
             context:  Complete CaseContext. The pipeline reads this but never mutates it.
             source:   Where this case came from (simulator/webhook/dashboard).
             approved: True if the merchant has already approved this case.
+            execute:  Run stages 7–9 (execute, verify, measure) as well as analysis.
+            outcome:  Simulator only — the case's pre-baked potential outcomes.
+                      When supplied, verification resolves the latent probability
+                      of the action this pipeline actually chose, against the same
+                      uniform draw the baseline used (architecture §10.3).
+                      When None, verification draws fresh entropy against
+                      customer_success_rate — correct for live cases, which have
+                      no counterfactual environment.
 
         Returns:
             DecisionProposal — the complete decision record.
@@ -397,12 +407,23 @@ class RecoveryPipeline:
             )
 
             # ── Stage 8: Verify ───────────────────────────────────────────────
+            # The action that was executed determines which potential outcome
+            # applies. Passing the executed action's latent probability (rather
+            # than letting verification fall back to customer_success_rate) is
+            # what makes the optimizer's choice affect the measured result.
             from backend.tools.verification import VerificationAdapter
             verifier = VerificationAdapter()
             verification = await verifier.verify(
                 case_id=case_id,
                 context=context,
                 action_result_reference=action_result.provider_reference,
+                latent_probability=(
+                    outcome.probability_for(recommended_action)
+                    if outcome is not None
+                    else None
+                ),
+                uniform_draw=outcome.uniform_draw if outcome is not None else None,
+                execution_mode=self._execution_mode,
             )
             logger.info(
                 "[Stage 8: Verify] case=%s recovered=%s actual=%.2f",

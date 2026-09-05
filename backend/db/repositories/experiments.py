@@ -27,10 +27,11 @@ class ExperimentsRepository:
                     incremental_recovery, net_incremental_recovery,
                     baseline_recovery_rate, ai_recovery_rate,
                     guardrail_stops, escalations, do_nothing_count,
+                    approvals_required,
                     created_at
                 ) VALUES (
                     $1, $2, $3, $4, $5, $6, $7, $8, $9,
-                    $10, $11, $12, $13, $14, $15, $16, $17
+                    $10, $11, $12, $13, $14, $15, $16, $17, $18
                 )
                 """,
                 metrics.experiment_id,
@@ -49,6 +50,7 @@ class ExperimentsRepository:
                 metrics.guardrail_stops,
                 metrics.escalations,
                 metrics.do_nothing_count,
+                metrics.approvals_required,
                 metrics.created_at,
             )
         return metrics.experiment_id

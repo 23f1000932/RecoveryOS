@@ -277,6 +277,7 @@ class SimulatorResult(BaseModel):
     guardrail_stops: int
     escalations: int
     do_nothing_count: int
+    approvals_required: int = 0
     cases: list[SimulatorCaseResult] = Field(default_factory=list)
     created_at: datetime
 
