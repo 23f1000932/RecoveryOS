@@ -73,7 +73,11 @@ def _generate_customers(n: int, rng: np.random.Generator) -> pd.DataFrame:
     # Preferred method
     preferred_methods = rng.choice(PAYMENT_METHODS, size=n, p=METHOD_PROBS)
 
-    customer_ids = [str(uuid.uuid4()) for _ in range(n)]
+    customer_ids: list[str] = []
+    for _ in range(n):
+        high = int(rng.integers(0, 2**63, dtype=np.int64))
+        low = int(rng.integers(0, 2**63, dtype=np.int64))
+        customer_ids.append(str(uuid.UUID(int=(high << 64) | low)))
 
     return pd.DataFrame({
         "customer_id":                customer_ids,

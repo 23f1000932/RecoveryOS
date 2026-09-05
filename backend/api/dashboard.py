@@ -85,7 +85,7 @@ async def get_dashboard_summary() -> DashboardSummary:
         recovered_cases = int(data.get("recovered_cases", 0))
 
         recovery_rate = recovered_cases / total if total > 0 else 0.0
-        baseline_rate = 0.0  # Populated from simulator experiments in Phase 8
+        baseline_rate = float(experiments[0].get("baseline_recovery_rate", 0.0)) if experiments else 0.0
 
         return DashboardSummary(
             revenue_at_risk=_fmt(revenue_at_risk),

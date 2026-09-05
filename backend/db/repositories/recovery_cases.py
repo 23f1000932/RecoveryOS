@@ -135,8 +135,16 @@ class RecoveryCaseRepository:
         """
         Atomically transition case status.
         Returns True if transition succeeded (row was updated).
-        Returns False if case was not in expected from_status (concurrent conflict).
+        Returns False if transition is invalid or case was not in expected from_status (concurrent conflict).
         """
+        from backend.domain.enums import can_transition
+        if not can_transition(from_status, to_status):
+            logger.warning(
+                "Invalid status transition attempted for case %s: %s -> %s is not permitted",
+                case_id, from_status.value, to_status.value,
+            )
+            return False
+
         pool = await get_pool()
         async with pool.acquire() as conn:
             result = await conn.execute(

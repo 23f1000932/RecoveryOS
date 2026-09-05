@@ -17,7 +17,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { ActionBarChart } from '../components/charts/ActionBarChart';
 import { CaseStatusBadge, ActionBadge, ApprovalBadge } from '../components/controls/StatusBadge';
 import { EmptyState } from '../components/layout/EmptyState';
@@ -149,7 +149,6 @@ function CandidateTable({ candidates, recommendedAction }: {
 
 export function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>();
-  const navigate = useNavigate();
 
   const [caseData, setCaseData] = useState<CaseDetailType | null>(null);
   const [audit, setAudit] = useState<AuditLogEntry[]>([]);

@@ -67,6 +67,7 @@ ALLOWED_TRANSITIONS: dict[CaseStatus, set[CaseStatus]] = {
     CaseStatus.DECISION_READY: {
         CaseStatus.PENDING_APPROVAL,
         CaseStatus.APPROVED,
+        CaseStatus.EXECUTING,
         CaseStatus.STOPPED,
         CaseStatus.ESCALATED,
     },
@@ -75,8 +76,13 @@ ALLOWED_TRANSITIONS: dict[CaseStatus, set[CaseStatus]] = {
         CaseStatus.STOPPED,
         CaseStatus.ESCALATED,
     },
-    CaseStatus.APPROVED: {CaseStatus.EXECUTING},
-    CaseStatus.EXECUTING: {CaseStatus.VERIFYING, CaseStatus.FAILED},
+    CaseStatus.APPROVED: {CaseStatus.EXECUTING, CaseStatus.STOPPED},
+    CaseStatus.EXECUTING: {
+        CaseStatus.VERIFYING,
+        CaseStatus.RECOVERED,
+        CaseStatus.FAILED,
+        CaseStatus.STOPPED,
+    },
     CaseStatus.VERIFYING: {
         CaseStatus.RECOVERED,
         CaseStatus.STOPPED,
@@ -91,6 +97,14 @@ ALLOWED_TRANSITIONS: dict[CaseStatus, set[CaseStatus]] = {
     CaseStatus.EXPIRED: set(),
     CaseStatus.UNKNOWN: set(),
 }
+
+
+def can_transition(from_status: CaseStatus, to_status: CaseStatus) -> bool:
+    """
+    Check if a state transition is valid according to ALLOWED_TRANSITIONS.
+    Enforces Rule 6 (state machine integrity).
+    """
+    return to_status in ALLOWED_TRANSITIONS.get(from_status, set())
 
 
 class ActionType(str, Enum):

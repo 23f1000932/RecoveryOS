@@ -39,6 +39,9 @@ COPY ml/ ./ml/
 COPY simulator/ ./simulator/
 COPY policies/ ./policies/
 
+# ── Train ML models at build time (survives gitignore per Phase 3) ─────────────
+RUN python -m ml.train --rows 50000 --seed 42
+
 # ── Health check ───────────────────────────────────────────────────────────────
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"

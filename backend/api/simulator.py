@@ -50,9 +50,33 @@ async def run_simulation(
     )
 
 
+@router.get("", response_model=list[dict])
+async def list_simulator_experiments(limit: int = 20) -> list[dict]:
+    """List recent simulation experiment runs."""
+    from backend.db.repositories.experiments import ExperimentsRepository
+    repo = ExperimentsRepository()
+    runs = await repo.list_experiments(limit=limit)
+    return [
+        {
+            "experiment_id": str(r["id"]),
+            "seed": r["seed"],
+            "dataset_size": r["dataset_size"],
+            "baseline_recovered": str(r["baseline_recovered"]),
+            "ai_recovered": str(r["ai_recovered"]),
+            "incremental_recovery": str(r["incremental_recovery"]),
+            "net_incremental_recovery": str(r["net_incremental_recovery"]),
+            "baseline_recovery_rate": float(r["baseline_recovery_rate"]),
+            "ai_recovery_rate": float(r["ai_recovery_rate"]),
+            "created_at": r["created_at"].isoformat() if r.get("created_at") else None,
+        }
+        for r in runs
+    ]
+
+
 @router.get("/{experiment_id}", response_model=SimulatorResult)
+@router.get("/experiments/{experiment_id}", response_model=SimulatorResult)
 async def get_experiment(experiment_id: str) -> SimulatorResult:
-    """Retrieve experiment results."""
+    """Retrieve experiment results. Accessible via both /{id} and /experiments/{id}."""
     from backend.db.repositories.experiments import ExperimentsRepository
     repo = ExperimentsRepository()
     experiment = await repo.get_experiment(experiment_id)

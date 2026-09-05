@@ -11,6 +11,7 @@ POST /api/recovery-cases/{case_id}/stop
 GET  /api/recovery-cases/{case_id}/audit
 """
 
+import json
 import logging
 from decimal import Decimal
 
@@ -274,6 +275,20 @@ async def analyze_case(case_id: str) -> dict:
     pipeline = create_pipeline(execution_mode=ExecutionMode.SIMULATION)
     proposal = await pipeline.process_case(context, source=PipelineSource.DASHBOARD)
 
+    # ── Persist decision and audit events (§25, §26, C3) ───────────────────────
+    from backend.services.case_service import CaseService
+    from backend.services.audit_service import AuditService
+    case_service = CaseService(case_repo)
+    audit_service = AuditService()
+
+    await case_service.persist_decision(case_id, proposal)
+    await audit_service.write_pipeline_events(
+        case_id=case_id,
+        proposal=proposal,
+        context=context,
+        source=PipelineSource.DASHBOARD,
+    )
+
     return {
         "case_id": case_id,
         "status": "analyzed",
@@ -319,10 +334,27 @@ async def approve_case(case_id: str, body: ApprovalRequest) -> ApprovalResponse:
             },
         )
 
+    transitioned = await repo.transition_status(
+        case_id=case_id,
+        from_status=current_status,
+        to_status=CaseStatus.APPROVED,
+    )
+    if not transitioned:
+        raise HTTPException(status_code=409, detail="Concurrent state conflict. Retry.")
+
     await repo.update_approval(
         case_id=case_id,
         approval_status=ApprovalStatus.APPROVED,
         case_status=CaseStatus.APPROVED,
+    )
+
+    from backend.services.audit_service import AuditService
+    audit_service = AuditService()
+    await audit_service.record_approval(
+        case_id=case_id,
+        approval_status=ApprovalStatus.APPROVED,
+        actor="merchant",
+        source=PipelineSource.DASHBOARD,
     )
 
     return ApprovalResponse(
@@ -354,10 +386,27 @@ async def reject_case(case_id: str, body: ApprovalRequest) -> ApprovalResponse:
             },
         )
 
+    transitioned = await repo.transition_status(
+        case_id=case_id,
+        from_status=current_status,
+        to_status=CaseStatus.STOPPED,
+    )
+    if not transitioned:
+        raise HTTPException(status_code=409, detail="Concurrent state conflict. Retry.")
+
     await repo.update_approval(
         case_id=case_id,
         approval_status=ApprovalStatus.REJECTED,
         case_status=CaseStatus.STOPPED,
+    )
+
+    from backend.services.audit_service import AuditService
+    audit_service = AuditService()
+    await audit_service.record_approval(
+        case_id=case_id,
+        approval_status=ApprovalStatus.REJECTED,
+        actor="merchant",
+        source=PipelineSource.DASHBOARD,
     )
 
     return ApprovalResponse(
@@ -372,8 +421,7 @@ async def reject_case(case_id: str, body: ApprovalRequest) -> ApprovalResponse:
 async def execute_case(case_id: str, body: ExecuteRequest) -> ExecuteResponse:
     """
     Execute the approved recovery action.
-    Backend validates status — frontend cannot override this check.
-    Wired to RecoveryPipeline in Phase 7.
+    Enforces CAS atomic transition, Action Idempotency, and real persistence.
     """
     repo = RecoveryCaseRepository()
     case = await repo.get_case(case_id)
@@ -400,18 +448,70 @@ async def execute_case(case_id: str, body: ExecuteRequest) -> ExecuteResponse:
             },
         )
 
-    # ── Phase 6: Real pipeline execution ──────────────────────────────────────
+    # ── CAS Concurrency Gate (§23, C4) ────────────────────────────────────────
+    transitioned = await repo.transition_status(
+        case_id=case_id,
+        from_status=current_status,
+        to_status=CaseStatus.EXECUTING,
+    )
+    if not transitioned:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": {
+                    "code": "CASE_ALREADY_EXECUTING",
+                    "message": f"Case {case_id} is already executing or undergoing concurrent state transition.",
+                    "details": {"current_status": current_status.value},
+                }
+            },
+        )
+
+    # ── Action Idempotency & Setup (§22, C4) ──────────────────────────────────
+    from backend.db.repositories.actions import ActionsRepository
     from backend.db.repositories.payments import PaymentsRepository
     from backend.db.repositories.customers import CustomersRepository
     from backend.orchestrator.context import CaseContext
     from backend.orchestrator.recovery_pipeline import create_pipeline
-    from backend.domain.enums import ExecutionMode, PipelineSource
+    from backend.domain.enums import ActionExecutionStatus, ActionType, ExecutionMode, PipelineSource
+    from backend.services.case_service import CaseService
+    from backend.services.audit_service import AuditService
 
     pay_repo = PaymentsRepository()
     cust_repo = CustomersRepository()
+    actions_repo = ActionsRepository()
+    case_service = CaseService(repo)
+    audit_service = AuditService()
+
     payment = await pay_repo.get_payment(str(case["payment_id"])) or {}
     customer = await cust_repo.get_customer(str(case["customer_id"])) or {}
     policy = _load_policy()
+
+    selected_action_str = case.get("selected_action") or "retry_now"
+    selected_action = ActionType(selected_action_str)
+    attempt_number = int(payment.get("attempt_number", 1))
+    idempotency_key = f"{case_id}:{selected_action.value}:{attempt_number}"
+
+    action_id = await actions_repo.create_action(
+        case_id=case_id,
+        action=selected_action,
+        idempotency_key=idempotency_key,
+        attempt_number=attempt_number,
+    )
+    existing_action = await actions_repo.get_action(action_id)
+    if existing_action and existing_action.get("status") in {
+        ActionExecutionStatus.SUCCESS.value,
+        ActionExecutionStatus.FAILED.value,
+    }:
+        is_success = existing_action["status"] == ActionExecutionStatus.SUCCESS.value
+        rec_amt = Decimal(str(existing_action.get("recovered_amount", 0)))
+        persisted_status = CaseStatus.RECOVERED if is_success else CaseStatus.FAILED
+        return ExecuteResponse(
+            case_id=case_id,
+            case_status=persisted_status,
+            action_executed=selected_action,
+            actual_recovered=_fmt(rec_amt),
+            message="Action already executed (idempotency key matched).",
+        )
 
     tx_count = customer.get("transaction_count", 1)
     success_count = customer.get("success_count", 0)
@@ -426,7 +526,7 @@ async def execute_case(case_id: str, body: ExecuteRequest) -> ExecuteResponse:
         currency=payment.get("currency", "INR"),
         method=payment.get("method", "card"),
         failure_code=payment.get("failure_code", "unknown"),
-        attempt_number=int(payment.get("attempt_number", 1)),
+        attempt_number=attempt_number,
         customer_success_rate=float(success_rate),
         customer_transaction_count=int(tx_count),
         customer_success_count=int(success_count),
@@ -448,13 +548,41 @@ async def execute_case(case_id: str, body: ExecuteRequest) -> ExecuteResponse:
         execute=True,
     )
 
+    # ── Persist Execution Outcome (C3) ─────────────────────────────────────────
+    if proposal.executed:
+        final_status = await case_service.persist_execution(
+            case_id=case_id,
+            actual_recovered=proposal.actual_recovered,
+            cost=proposal.cost,
+        )
+        action_exec_status = (
+            ActionExecutionStatus.SUCCESS
+            if proposal.actual_recovered > 0
+            else ActionExecutionStatus.FAILED
+        )
+        await actions_repo.update_execution_result(
+            action_id=action_id,
+            status=action_exec_status,
+            recovered_amount=proposal.actual_recovered,
+            cost=proposal.cost,
+        )
+        await audit_service.record_execution(
+            case_id=case_id,
+            action=proposal.recommended_action,
+            success=True,
+            recovered_amount=proposal.actual_recovered,
+            cost=proposal.cost,
+            actor="merchant" if current_status == CaseStatus.APPROVED else "system",
+            source=PipelineSource.DASHBOARD,
+        )
+    else:
+        # Execution was blocked (e.g. approval required)
+        final_status = current_status
+        await repo.transition_status(case_id, from_status=CaseStatus.EXECUTING, to_status=current_status)
+
     return ExecuteResponse(
         case_id=case_id,
-        case_status=(
-            CaseStatus.RECOVERED if (proposal.executed and proposal.actual_recovered > 0)
-            else CaseStatus.FAILED if proposal.executed
-            else current_status
-        ),
+        case_status=final_status,
         action_executed=proposal.recommended_action,
         actual_recovered=_fmt(proposal.actual_recovered) if proposal.executed else None,
         message=(
@@ -496,6 +624,10 @@ async def stop_case(case_id: str) -> StopResponse:
     if not transitioned:
         raise HTTPException(status_code=409, detail="Concurrent state conflict. Retry.")
 
+    from backend.services.audit_service import AuditService
+    audit_service = AuditService()
+    await audit_service.record_case_stopped(case_id=case_id, actor="merchant", source=PipelineSource.DASHBOARD)
+
     return StopResponse(
         case_id=case_id,
         case_status=CaseStatus.STOPPED,
@@ -514,6 +646,18 @@ async def get_case_audit(case_id: str) -> AuditLogResponse:
     entries_data = await audit_repo.get_case_audit(case_id)
 
     from backend.domain.enums import AuditEventType, PipelineSource
+    def _parse_dict(val, default_empty=True):
+        if val is None:
+            return {} if default_empty else None
+        if isinstance(val, str):
+            try:
+                return json.loads(val)
+            except Exception:
+                return {} if default_empty else None
+        if isinstance(val, dict):
+            return val
+        return {} if default_empty else None
+
     entries = []
     for e in entries_data:
         try:
@@ -527,10 +671,10 @@ async def get_case_audit(case_id: str) -> AuditLogResponse:
                     model_name=e.get("model_name"),
                     model_version=e.get("model_version"),
                     policy_version=e.get("policy_version"),
-                    input_snapshot=e.get("input_snapshot") or {},
-                    output_snapshot=e.get("output_snapshot") or {},
-                    decision=e.get("decision"),
-                    guardrail_result=e.get("guardrail_result"),
+                    input_snapshot=_parse_dict(e.get("input_snapshot"), default_empty=True),
+                    output_snapshot=_parse_dict(e.get("output_snapshot"), default_empty=True),
+                    decision=_parse_dict(e.get("decision"), default_empty=False),
+                    guardrail_result=_parse_dict(e.get("guardrail_result"), default_empty=False),
                     timestamp=e["timestamp"],
                 )
             )

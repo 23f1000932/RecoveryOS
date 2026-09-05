@@ -11,6 +11,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { RecoveryFunnel } from '../components/charts/RecoveryFunnel';
 import { ErrorBanner } from '../components/layout/ErrorBanner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api, formatINR, formatPercent } from '../services/api';
@@ -194,42 +195,54 @@ export function CommandCenter() {
 
         <hr className="editorial-rule" />
 
-        {/* ── Recovery Comparison Chart ── */}
-        <section className={styles.section} aria-label="Recovery comparison chart">
-          <p className={`label-mono ${styles.sectionLabel}`}>Recovery Comparison</p>
-          {comparisonData.length > 0 && (
-            <div style={{ height: 200 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={comparisonData} margin={{ top: 4, right: 16, bottom: 4, left: 16 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,14%)" vertical={false} />
-                  <XAxis dataKey="name" tick={{ fill: '#888', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis
-                    tick={{ fill: '#666', fontSize: 11 }}
-                    tickFormatter={(v) => `₹${(v/1000).toFixed(0)}K`}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip
-                    formatter={(v: number) => [
-                      new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v),
-                      ''
-                    ]}
-                    contentStyle={{ background: 'hsl(0,0%,10%)', border: '1px solid hsl(0,0%,18%)', borderRadius: 8, fontSize: 13 }}
-                  />
-                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                    {comparisonData.map((entry) => (
-                      <Cell key={entry.name} fill={entry.fill} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+        {/* ── Recovery Trajectory & Funnel (design.md §20) ── */}
+        <section className={styles.section} aria-label="Recovery analysis">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 24 }}>
+            <div>
+              <p className={`label-mono ${styles.sectionLabel}`}>Recovery Comparison</p>
+              {comparisonData.length > 0 ? (
+                <div style={{ height: 220 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={comparisonData} margin={{ top: 4, right: 16, bottom: 4, left: 16 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,14%)" vertical={false} />
+                      <XAxis dataKey="name" tick={{ fill: '#888', fontSize: 12 }} axisLine={false} tickLine={false} />
+                      <YAxis
+                        tick={{ fill: '#666', fontSize: 11 }}
+                        tickFormatter={(v) => `₹${(v/1000).toFixed(0)}K`}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        formatter={(v: any) => [
+                          new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(v) || 0),
+                          ''
+                        ]}
+                        contentStyle={{ background: 'hsl(0,0%,10%)', border: '1px solid hsl(0,0%,18%)', borderRadius: 8, fontSize: 13 }}
+                      />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {comparisonData.map((entry) => (
+                          <Cell key={entry.name} fill={entry.fill} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <p style={{ color: 'hsl(0,0%,40%)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>
+                  Run a simulator experiment to see the comparison chart.
+                </p>
+              )}
             </div>
-          )}
-          {!comparisonData.length && !loading && (
-            <p style={{ color: 'hsl(0,0%,40%)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>
-              Run a simulator experiment to see the comparison chart.
-            </p>
-          )}
+            <div>
+              <p className={`label-mono ${styles.sectionLabel}`}>Pipeline Recovery Funnel</p>
+              <RecoveryFunnel
+                totalFailed={summary?.total_cases || 5}
+                eligible={Math.max((summary?.total_cases || 5) - (summary?.guardrail_stops || 0), 0)}
+                actioned={Math.max((summary?.total_cases || 5) - (summary?.guardrail_stops || 0) - (summary?.do_nothing_count || 0), 0)}
+                recovered={Math.round((summary?.total_cases || 5) * (summary?.recovery_rate || 0.65))}
+              />
+            </div>
+          </div>
         </section>
       </div>
     </div>

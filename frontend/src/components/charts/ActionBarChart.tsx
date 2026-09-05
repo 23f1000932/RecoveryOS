@@ -18,7 +18,7 @@ import {
   YAxis,
 } from 'recharts';
 import type { ActionCandidate } from '../../types';
-import { formatAction, formatINR } from '../../services/api';
+import { formatAction } from '../../services/api';
 
 interface Props {
   candidates: ActionCandidate[];
@@ -100,7 +100,7 @@ export function ActionBarChart({ candidates, recommendedAction }: Props) {
           <LabelList
             dataKey="enr"
             position="right"
-            formatter={(v: number) => fmt(String(v))}
+            formatter={(v: any) => fmt(String(v))}
             style={{ fill: '#aaa', fontSize: 11 }}
           />
           {data.map((entry) => (

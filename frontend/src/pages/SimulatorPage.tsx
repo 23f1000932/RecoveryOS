@@ -10,6 +10,7 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
+import { IncrementalRevenueChart } from '../components/charts/IncrementalRevenueChart';
 import { RecoveryComparisonChart } from '../components/charts/RecoveryComparisonChart';
 import { EmptyState } from '../components/layout/EmptyState';
 import { ErrorBanner } from '../components/layout/ErrorBanner';
@@ -234,12 +235,20 @@ export function SimulatorPage() {
               </span>
             </div>
 
-            {/* Chart */}
-            <div style={{ marginTop: 24 }}>
-              <p className="label-mono" style={{ marginBottom: 8, fontSize: 11 }}>
-                Recovery Comparison (₹)
-              </p>
-              <RecoveryComparisonChart result={result} />
+            {/* Charts */}
+            <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+              <div>
+                <p className="label-mono" style={{ marginBottom: 8, fontSize: 11 }}>
+                  Recovery Comparison (₹)
+                </p>
+                <RecoveryComparisonChart result={result} />
+              </div>
+              <div>
+                <p className="label-mono" style={{ marginBottom: 8, fontSize: 11 }}>
+                  Cumulative Net Incremental Trajectory (₹)
+                </p>
+                <IncrementalRevenueChart result={result} />
+              </div>
             </div>
           </section>
         )}

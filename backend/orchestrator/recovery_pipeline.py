@@ -486,11 +486,11 @@ def create_pipeline(
         )
         model = RuleBasedRecoveryModel()
 
-    # ── Phase 5: Wire Gemini agent (optional) ─────────────────────────────────
+    # ── Phase 5: Wire Gemini agent (optional, live/test only) ─────────────────
     agent = None
     from backend.config import get_settings
     settings = get_settings()
-    if settings.gemini_available:
+    if execution_mode != ExecutionMode.SIMULATION and settings.gemini_available:
         try:
             from backend.agents.agent import GeminiAgent
             agent = GeminiAgent(

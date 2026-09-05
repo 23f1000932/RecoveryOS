@@ -110,11 +110,70 @@ async def _run_pipeline_for_failed_payment(
             await webhook_repo.mark_failed(event_id)
             return
 
-        # Build a minimal CaseContext from the payment payload
-        # A real implementation would look up/create customer record here
-        # For Phase 6: create a synthetic case_id based on payment ID
+        from backend.db.repositories.customers import CustomersRepository
+        from backend.db.repositories.payments import PaymentsRepository
+        from backend.db.repositories.recovery_cases import RecoveryCaseRepository
+        from backend.services.case_service import CaseService
+        from backend.services.audit_service import AuditService
+
+        cust_repo = CustomersRepository()
+        pay_repo = PaymentsRepository()
+        case_repo = RecoveryCaseRepository()
+        case_service = CaseService(case_repo)
+        audit_service = AuditService()
+
         external_payment_id = payment_context.get("external_payment_id", "")
-        case_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"webhook:{external_payment_id}"))
+        merchant_id = payment_context.get("merchant_id", MERCHANT_ID_FALLBACK)
+
+        # 1. Resolve or create customer
+        contact_id = payment_context.get("contact") or payment_context.get("email") or external_payment_id
+        customer_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"cust:{contact_id}"))
+        existing_cust = await cust_repo.get_customer(customer_uuid)
+        if not existing_cust:
+            try:
+                from backend.db.connection import get_pool
+                pool = await get_pool()
+                async with pool.acquire() as conn:
+                    await conn.execute(
+                        """
+                        INSERT INTO customers (id, merchant_id, transaction_count, success_count, failure_count, avg_amount, preferred_method)
+                        VALUES ($1, $2, 1, 0, 1, $3, $4)
+                        ON CONFLICT (id) DO NOTHING
+                        """,
+                        customer_uuid, merchant_id, payment_context["amount"], payment_context.get("method", "card"),
+                    )
+            except Exception as e:
+                logger.warning("Could not pre-insert customer %s: %s", customer_uuid, e)
+
+        # 2. Resolve or create payment
+        existing_pay = await pay_repo.get_payment_by_external_id(external_payment_id)
+        if existing_pay:
+            payment_db_id = str(existing_pay["id"])
+        else:
+            payment_db_id = await pay_repo.create_payment(
+                merchant_id=merchant_id,
+                customer_id=customer_uuid,
+                external_payment_id=external_payment_id,
+                amount=payment_context["amount"],
+                currency=payment_context.get("currency", "INR"),
+                method=payment_context.get("method", "card"),
+                status="failed",
+                failure_code=payment_context.get("failure_code", "unknown"),
+                attempt_number=1,
+            )
+
+        # 3. Resolve or create recovery case
+        existing_case = await case_repo.get_case_by_payment_id(payment_db_id)
+        if existing_case:
+            case_id = str(existing_case["id"])
+        else:
+            case_id = await case_repo.create_case(
+                payment_id=payment_db_id,
+                customer_id=customer_uuid,
+                merchant_id=merchant_id,
+                revenue_at_risk=payment_context["amount"],
+                policy_version="1.0",
+            )
 
         from backend.orchestrator.context import RecoveryPolicy
         policy = RecoveryPolicy(
@@ -132,15 +191,15 @@ async def _run_pipeline_for_failed_payment(
 
         context = CaseContext(
             case_id=case_id,
-            payment_id=external_payment_id,
-            customer_id=str(uuid.uuid5(uuid.NAMESPACE_DNS, f"cust:{payment_context.get('contact', case_id)}")),
-            merchant_id=payment_context.get("merchant_id", MERCHANT_ID_FALLBACK),
+            payment_id=payment_db_id,
+            customer_id=customer_uuid,
+            merchant_id=merchant_id,
             amount=payment_context["amount"],
             currency=payment_context.get("currency", "INR"),
             method=payment_context.get("method", "card"),
             failure_code=payment_context.get("failure_code", "unknown"),
             attempt_number=1,
-            customer_success_rate=0.50,        # unknown without DB lookup
+            customer_success_rate=0.50,
             customer_transaction_count=1,
             customer_success_count=0,
             customer_failure_count=1,
@@ -156,7 +215,17 @@ async def _run_pipeline_for_failed_payment(
         proposal = await pipeline.process_case(
             context,
             source=PipelineSource.WEBHOOK,
-            execute=False,   # Phase 6: analyze only; execute=True for live mode
+            execute=False,
+        )
+
+        # Persist decision and audit events
+        await case_service.persist_decision(case_id, proposal)
+        await audit_service.write_pipeline_events(
+            case_id=case_id,
+            proposal=proposal,
+            context=context,
+            source=PipelineSource.WEBHOOK,
+            actor="webhook",
         )
 
         logger.info(

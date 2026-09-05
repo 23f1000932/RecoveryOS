@@ -18,7 +18,7 @@ import { EmptyState } from '../components/layout/EmptyState';
 import { ErrorBanner } from '../components/layout/ErrorBanner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api, formatINR } from '../services/api';
-import type { CaseStatus, RecoveryCaseSummary } from '../types';
+import type { RecoveryCaseSummary } from '../types';
 import styles from './RecoveryQueue.module.css';
 
 // ── Filter Tabs ───────────────────────────────────────────────────────────────

@@ -11,7 +11,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Legend,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -32,20 +31,7 @@ function fmtK(v: string | number): string {
 }
 
 export function RecoveryComparisonChart({ result }: Props) {
-  const data = [
-    {
-      name: 'Recovered',
-      Baseline: parseFloat(result.baseline_recovered) || 0,
-      'RecoveryOS AI': parseFloat(result.ai_recovered) || 0,
-    },
-    {
-      name: 'Recovery Rate',
-      Baseline: parseFloat((result.baseline_recovery_rate * 100).toFixed(1)) || 0,
-      'RecoveryOS AI': parseFloat((result.ai_recovery_rate * 100).toFixed(1)) || 0,
-    },
-  ];
-
-  // Two separate charts — amounts + rate
+  // Amounts + incremental breakdown
   const amountData = [
     { name: 'Baseline', value: parseFloat(result.baseline_recovered) || 0, fill: 'hsl(210,50%,45%)' },
     { name: 'RecoveryOS AI', value: parseFloat(result.ai_recovered) || 0, fill: 'hsl(35,85%,60%)' },
@@ -70,7 +56,7 @@ export function RecoveryComparisonChart({ result }: Props) {
           tickLine={false}
         />
         <Tooltip
-          formatter={(value: number) => fmtK(value)}
+          formatter={(value: any) => fmtK(value)}
           contentStyle={{
             background: 'hsl(0,0%,10%)',
             border: '1px solid hsl(0,0%,20%)',
