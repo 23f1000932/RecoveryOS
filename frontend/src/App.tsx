@@ -1,8 +1,8 @@
 /**
  * RecoveryOS — Application Router
  *
- * All 6 pages wired to their routes using React Router v6.
- * AppLayout provides the sidebar shell via Outlet.
+ * All 6 operational pages wired to their routes using React Router v6.
+ * AppLayout provides the operational sidebar shell via Outlet.
  */
 
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
@@ -19,23 +19,24 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppLayout />}>
-          {/* Command Center — primary dashboard */}
+          {/* Command Center — primary financial dashboard */}
           <Route index element={<CommandCenter />} />
 
-          {/* Recovery Queue — case list + case detail */}
+          {/* Recovery Queue — case list + case forensic detail */}
           <Route path="recovery-queue" element={<RecoveryQueue />} />
           <Route path="recovery-queue/:caseId" element={<CaseDetailPage />} />
 
-          {/* Simulator — A/B experiment runner */}
+          {/* Recovery Simulation Lab — A/B evaluation against baseline retry */}
           <Route path="simulator" element={<SimulatorPage />} />
 
-          {/* Policies — read-only guardrail config */}
+          {/* Guardrails & Policies — merchant policy and financial bounds */}
           <Route path="policies" element={<PoliciesPage />} />
 
-          {/* Audit Log — decision trail */}
+          {/* Decision Audit — complete decision & verification timeline */}
           <Route path="audit" element={<AuditLogPage />} />
+          <Route path="audit/:caseId" element={<AuditLogPage />} />
 
-          {/* Catch-all */}
+          {/* Catch-all redirect to Command Center */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

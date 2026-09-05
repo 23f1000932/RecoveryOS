@@ -1,12 +1,6 @@
 /**
- * RecoveryOS — AI Recovery Queue (Bitcoin DeFi Tactical Mempool Overhaul)
- *
- * Features:
- *   - Mempool status filter tabs (All, Pending, Decision Ready, Multi-Sig Approval, Approved, Recovered, Stopped, Failed)
- *   - Real-time client-side search by Case ID or Amount
- *   - Tactical row view with cryptographic hashes, expected net revenue, and model confidence
- *   - Auto-refresh ticker every 15 seconds with manual sync
- *   - Gamification hook on inspection
+ * RecoveryOS — Recovery Queue
+ * Operational pipeline of failed payments requiring analysis, intervention, or approval.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -15,25 +9,25 @@ import {
   RotateCcw,
   Search,
   ShieldAlert,
+  ArrowRight,
 } from 'lucide-react';
 import { CaseStatusBadge, ActionBadge } from '../components/controls/StatusBadge';
 import { EmptyState } from '../components/layout/EmptyState';
 import { ErrorBanner } from '../components/layout/ErrorBanner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api, formatINR } from '../services/api';
-import { gamification } from '../services/gamification';
 import type { RecoveryCaseSummary } from '../types';
 import styles from './RecoveryQueue.module.css';
 
 const STATUS_TABS: { label: string; value: string }[] = [
-  { label: 'All Mempool',        value: '' },
-  { label: '⏳ Ingesting',       value: 'CREATED,ANALYZING' },
-  { label: '⚡ Decision Ready',  value: 'DECISION_READY' },
-  { label: '🔒 Multi-Sig Approval', value: 'PENDING_APPROVAL' },
-  { label: '✓ Approved',        value: 'APPROVED' },
-  { label: '💰 Recovered Alpha', value: 'RECOVERED' },
-  { label: '⏹ Halted',          value: 'STOPPED' },
-  { label: '✗ Failed',          value: 'FAILED' },
+  { label: 'All',              value: '' },
+  { label: 'Analyzing',        value: 'CREATED,ANALYZING' },
+  { label: 'Decision Ready',   value: 'DECISION_READY' },
+  { label: 'Pending Approval', value: 'PENDING_APPROVAL' },
+  { label: 'Approved',         value: 'APPROVED' },
+  { label: 'Recovered',        value: 'RECOVERED' },
+  { label: 'Stopped',          value: 'STOPPED' },
+  { label: 'Failed',           value: 'FAILED' },
 ];
 
 const REFRESH_INTERVAL_MS = 15_000;
@@ -49,9 +43,7 @@ function CaseRow({
   return (
     <tr className={styles.row} onClick={onClick} tabIndex={0} role="button">
       <td className={styles.tdId}>
-        <div className={styles.caseIdWrapper}>
-          <span className={styles.caseId}>{c.id.slice(0, 8)}…</span>
-        </div>
+        <span className={styles.caseId}>CASE-{c.id.slice(0, 8).toUpperCase()}</span>
       </td>
       <td>
         <CaseStatusBadge status={c.status} />
@@ -80,9 +72,9 @@ function CaseRow({
               className={styles.confDot}
               style={{
                 background:
-                  c.model_confidence >= 0.8
-                    ? '#10B981'
-                    : c.model_confidence >= 0.6
+                  c.model_confidence >= 0.75
+                    ? 'var(--success-text)'
+                    : c.model_confidence >= 0.55
                     ? '#F59E0B'
                     : '#EF4444',
               }}
@@ -96,11 +88,11 @@ function CaseRow({
       <td>
         {c.requires_approval ? (
           <span className={styles.approvalBadge}>
-            <ShieldAlert size={11} />
-            REQUIRES MULTI-SIG
+            <ShieldAlert size={12} />
+            Approval Required
           </span>
         ) : (
-          <span className={styles.dash}>Autonomous</span>
+          <span className={styles.dash}>Automatic</span>
         )}
       </td>
       <td className={styles.tdTime}>
@@ -111,10 +103,10 @@ function CaseRow({
           minute: '2-digit',
         })}
       </td>
-      <td>
-        <button className={styles.inspectBtn} onClick={onClick}>
-          Inspect →
-        </button>
+      <td style={{ textAlign: 'right' }}>
+        <span className={styles.inspectLink}>
+          Inspect <ArrowRight size={13} />
+        </span>
       </td>
     </tr>
   );
@@ -163,7 +155,6 @@ export function RecoveryQueue() {
     }
   }, [page, statusFilter]);
 
-  // Initial load + auto-refresh
   useEffect(() => {
     load();
     timerRef.current = setInterval(() => load(true), REFRESH_INTERVAL_MS);
@@ -178,11 +169,10 @@ export function RecoveryQueue() {
   };
 
   const handleInspect = (caseId: string) => {
-    gamification.addXP(25, "Forensics Investigation Initiated");
-    navigate(`/cases/${caseId}`);
+    navigate(`/recovery-queue/${caseId}`);
   };
 
-  // Filter cases by search query (ID or amount)
+  // Client-side search filter by ID or amount
   const displayedCases = cases.filter((c) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -198,9 +188,9 @@ export function RecoveryQueue() {
   return (
     <div className={`animate-enter ${styles.page}`}>
       <PageHeader
-        label="Tactical Queue"
-        title="Payment Mempool & Forensics"
-        subtitle={`${total.toLocaleString()} active transaction${total !== 1 ? 's' : ''} in pipeline · decentralized auto-sync every 15s`}
+        label="Recovery Operations"
+        title="Recovery Queue"
+        subtitle={`${total.toLocaleString()} failed payment case${total !== 1 ? 's' : ''} in pipeline · auto-refreshing every 15s`}
       />
 
       <div className={styles.toolbar}>
@@ -223,11 +213,11 @@ export function RecoveryQueue() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             {/* Search Box */}
             <div className={styles.searchBox}>
-              <Search size={14} color="var(--color-text-muted)" />
+              <Search size={14} color="var(--muted-foreground)" />
               <input
                 className={styles.searchInput}
                 type="text"
-                placeholder="Search case hash or amount…"
+                placeholder="Search case ID or amount…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -238,9 +228,9 @@ export function RecoveryQueue() {
               className={styles.refreshBtn}
               onClick={() => load()}
               disabled={loading || refreshing}
-              title="Sync mempool transactions"
+              title="Sync recovery cases"
             >
-              <RotateCcw size={13} className={refreshing ? 'animate-spin' : ''} />
+              <RotateCcw size={12} className={refreshing ? 'animate-spin' : ''} />
               <span>{refreshing ? 'SYNCING…' : 'SYNC'}</span>
             </button>
           </div>
@@ -256,20 +246,20 @@ export function RecoveryQueue() {
       {loading && cases.length === 0 ? (
         <div className={styles.loadingState}>
           <div className={styles.spinner} />
-          <span className="label-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-            INGESTING MEMPOOL BLOCKS…
+          <span className="label-mono">
+            LOADING RECOVERY CASES…
           </span>
         </div>
       ) : displayedCases.length === 0 ? (
         <EmptyState
-          icon="📭"
-          title="No Transactions Found"
+          icon="📋"
+          title="No Recovery Cases Found"
           description={
             searchQuery
-              ? `No transactions match your query "${searchQuery}".`
+              ? `No cases match your search "${searchQuery}".`
               : statusFilter
-              ? `No cases currently in state "${statusFilter}". Try switching filters.`
-              : 'Mempool is currently clear. Failed transactions will stream in as detected.'
+              ? `No cases currently in state "${statusFilter.replace(',', ' or ')}".`
+              : 'No recovery cases require attention. Cases appear here when a payment fails.'
           }
           action={
             searchQuery || statusFilter
@@ -289,14 +279,14 @@ export function RecoveryQueue() {
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Case Hash</th>
-                  <th>Consensus Status</th>
+                  <th>Case ID</th>
+                  <th>Status</th>
                   <th>Revenue at Risk</th>
-                  <th>Optimal Action</th>
-                  <th>Expected Net Alpha</th>
+                  <th>Recommended Action</th>
+                  <th>Expected Net Revenue</th>
                   <th>Confidence</th>
                   <th>Governance</th>
-                  <th>Block Timestamp</th>
+                  <th>Created At</th>
                   <th style={{ textAlign: 'right' }}>Action</th>
                 </tr>
               </thead>
@@ -320,17 +310,17 @@ export function RecoveryQueue() {
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
-                ← Prev Block
+                ← Previous
               </button>
               <span className={styles.pageInfo}>
-                Page {page} of {totalPages} ({total} cases)
+                Page {page} of {totalPages} ({total} total cases)
               </span>
               <button
                 className={styles.pageBtn}
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >
-                Next Block →
+                Next →
               </button>
             </div>
           )}
@@ -339,3 +329,5 @@ export function RecoveryQueue() {
     </div>
   );
 }
+
+export default RecoveryQueue;

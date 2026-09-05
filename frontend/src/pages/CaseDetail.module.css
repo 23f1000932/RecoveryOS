@@ -1,7 +1,7 @@
-/* RecoveryOS — CaseDetail Page Styles (Bitcoin DeFi Block Forensics Overhaul) */
+/* RecoveryOS — Case Detail Styles (Clean Fintech Operations) */
 
 .page {
-  max-width: 1300px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 0 64px;
 }
@@ -12,14 +12,14 @@
   align-items: center;
   justify-content: center;
   min-height: 320px;
-  gap: 16px;
+  gap: 14px;
 }
 
 .spinner {
-  width: 36px;
-  height: 36px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--color-brand-primary);
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -35,12 +35,12 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 24px;
-  padding: 14px 20px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-surface);
+  margin-bottom: 20px;
+  padding: 12px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .approvalWarning {
@@ -49,21 +49,82 @@
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #F59E0B;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 3px 9px;
+}
+
+/* ── Approval Panel Callout ──────────────────────────────────────────────── */
+
+.approvalPanel {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(14, 19, 31, 0.98) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.approvalPanelHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #F59E0B;
-  background: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: var(--radius-full);
-  padding: 4px 12px;
+}
+
+.approvalDetails {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+}
+
+.approvalItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.approvalLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
+.approvalValue {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.approvalReasonText {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
 }
 
 /* ── 2-Column Responsive Grid ────────────────────────────────────────────── */
 
 .grid {
   display: grid;
-  grid-template-columns: 1fr 1.55fr;
+  grid-template-columns: 1fr 1.5fr;
   gap: 20px;
   align-items: start;
 }
@@ -84,22 +145,20 @@
 /* ── Cards & Context ─────────────────────────────────────────────────────── */
 
 .cardSection {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 22px;
-  box-shadow: var(--shadow-surface);
-  position: relative;
-  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
 }
 
 .cardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--color-border-subtle);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .cardTitle {
@@ -107,106 +166,119 @@
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-secondary);
+  color: var(--muted);
 }
 
 .contextGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 14px;
 }
 
 .contextItem {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .ctxLabel {
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
 }
 
 .ctxValue {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
   font-family: var(--font-mono);
 }
 
 .ctxHighlight {
-  color: var(--color-accent-gold);
-  text-shadow: 0 0 10px rgba(255, 214, 0, 0.2);
+  color: var(--accent-gold);
 }
 
-/* ── Holographic Gemini Agent Card ───────────────────────────────────────── */
+/* ── AI Recommendation Card ──────────────────────────────────────────────── */
 
-.hologramCard {
-  background: linear-gradient(135deg, rgba(247, 147, 26, 0.05) 0%, rgba(15, 17, 21, 0.95) 100%);
-  border: 1px solid rgba(247, 147, 26, 0.35);
-  box-shadow: 0 0 24px rgba(247, 147, 26, 0.12);
-  border-radius: var(--radius-xl);
+.aiDecisionCard {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.03) 0%, rgba(14, 19, 31, 0.95) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 22px;
+  box-shadow: var(--shadow-sm);
 }
 
-.hologramHeader {
+.decisionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 14px;
 }
 
-.hologramTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.decisionLabel {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  color: var(--color-brand-primary);
+  color: var(--accent-primary);
   text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.modelMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
 }
 
 .decisionBanner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(247, 147, 26, 0.25);
-  border-radius: var(--radius-lg);
-  padding: 14px 18px;
-  margin-bottom: 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  margin-bottom: 14px;
 }
 
 .decisionActionName {
   font-family: var(--font-heading);
-  font-size: 18px;
+  font-size: 1.15rem;
   font-weight: 700;
-  color: var(--color-brand-primary);
-  letter-spacing: 0.02em;
+  color: var(--foreground);
 }
 
 .explanationBox {
   font-size: 13px;
-  line-height: 1.7;
-  color: var(--color-text-secondary);
-  background: rgba(0, 0, 0, 0.3);
-  border-left: 3px solid var(--color-brand-primary);
-  border-radius: 0 var(--radius-md) var(--radius-md) 0;
-  padding: 16px 18px;
+  line-height: 1.65;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.25);
+  border-left: 3px solid var(--accent-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  padding: 14px 16px;
   white-space: pre-wrap;
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
 }
 
-/* ── Action Buttons ─────────────────────────────────────────────────────── */
+.doNothingAlert {
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--foreground);
+  line-height: 1.5;
+}
+
+/* ── Governance Action Buttons ───────────────────────────────────────────── */
 
 .actionButtons {
   display: flex;
@@ -217,82 +289,80 @@
 .btnActionPrimary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 22px;
-  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-secondary) 100%);
-  color: #030304;
+  gap: 6px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  color: #06080D;
   border: none;
-  border-radius: var(--radius-full);
-  font-family: var(--font-heading);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(247, 147, 26, 0.3);
-  transition: all var(--transition-normal);
+  box-shadow: 0 2px 10px rgba(245, 158, 11, 0.25);
+  transition: all var(--transition-fast);
 }
 
 .btnActionPrimary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(247, 147, 26, 0.5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
 }
 
 .btnActionSecondary {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 6px;
+  padding: 8px 16px;
   background: rgba(255, 255, 255, 0.04);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .btnActionSecondary:hover:not(:disabled) {
-  background: rgba(247, 147, 26, 0.1);
-  border-color: rgba(247, 147, 26, 0.35);
-  color: var(--color-brand-primary);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btnActionDanger {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
+  gap: 6px;
+  padding: 8px 16px;
   background: rgba(239, 68, 68, 0.08);
   color: #EF4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-full);
-  font-family: var(--font-mono);
-  font-size: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .btnActionDanger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.18);
+  background: rgba(239, 68, 68, 0.16);
 }
 
 .gateHint {
-  margin-top: 14px;
+  margin-top: 12px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
 }
 
 /* ── Candidate Matrix ────────────────────────────────────────────────────── */
 
 .tableWrapper {
   overflow-x: auto;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border-subtle);
-  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .candidateTable {
@@ -303,20 +373,20 @@
 
 .candidateTable th {
   text-align: left;
-  padding: 10px 12px;
+  padding: 9px 12px;
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+  border-bottom: 1px solid var(--border);
 }
 
 .candidateTable td {
-  padding: 12px;
-  border-bottom: 1px solid var(--color-border-subtle);
-  color: var(--color-text-secondary);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--muted);
   font-family: var(--font-mono);
 }
 
@@ -325,8 +395,8 @@
 }
 
 .rowSelected td {
-  background: rgba(247, 147, 26, 0.08) !important;
-  color: var(--color-text-primary);
+  background: rgba(245, 158, 11, 0.08) !important;
+  color: var(--foreground);
 }
 
 .selectedTag {
@@ -335,21 +405,20 @@
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #030304;
-  background: var(--color-brand-primary);
-  padding: 2px 6px;
+  letter-spacing: 0.06em;
+  color: #06080D;
+  background: var(--accent-primary);
+  padding: 1px 6px;
   border-radius: var(--radius-sm);
   margin-left: 8px;
 }
 
 .allowedTag {
-  color: #10B981;
+  color: var(--success-text);
 }
 
 .blockedTag {
   color: #EF4444;
-  cursor: help;
 }
 
 /* ── Guardrail Checks ────────────────────────────────────────────────────── */
@@ -368,8 +437,8 @@
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 700;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
+  padding: 3px 10px;
+  border-radius: var(--radius-sm);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -377,7 +446,7 @@
 .verdictPill[data-verdict="pass"] {
   background: rgba(16, 185, 129, 0.12);
   border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #10B981;
+  color: var(--success-text);
 }
 
 .verdictPill[data-verdict="block"],
@@ -397,7 +466,7 @@
 .guardrailChecksGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px 16px;
+  gap: 8px 14px;
 }
 
 @media (max-width: 650px) {
@@ -423,22 +492,22 @@
 }
 
 .auditToggle {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-brand-primary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--accent-primary);
 }
 
 .auditTimeline {
-  margin-top: 18px;
+  margin-top: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .auditEntry {
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-subtle);
-  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.2);
   overflow: hidden;
 }
 
@@ -446,46 +515,46 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   cursor: pointer;
   transition: background var(--transition-fast);
 }
 
 .auditSummary:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .auditDot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .auditLabel {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
   flex: 1;
 }
 
 .auditMeta {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
 }
 
 .auditBody {
-  padding: 14px 16px;
-  border-top: 1px solid var(--color-border-subtle);
-  background: rgba(0, 0, 0, 0.4);
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-subtle);
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .auditSnapshots {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 @media (max-width: 650px) {
@@ -495,9 +564,9 @@
 .snapshotLabel {
   font-family: var(--font-mono);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
-  margin-bottom: 6px;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+  margin-bottom: 5px;
 }

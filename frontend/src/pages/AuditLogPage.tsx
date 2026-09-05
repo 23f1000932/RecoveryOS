@@ -1,7 +1,8 @@
 /**
- * RecoveryOS — Audit Log Page (Bitcoin DeFi Ledger Overhaul)
+ * RecoveryOS — Decision Audit Page (Section 27)
  *
- * Displays immutable cryptographic timeline of execution receipts and state transitions.
+ * Displays chronological, tamper-evident audit trail of AI recovery decisions,
+ * guardrail checks, execution receipts, and payment verification outcomes.
  */
 
 import { useCallback, useEffect, useState } from 'react';
@@ -22,9 +23,9 @@ function eventColor(type: string): string {
   if (type.includes('recovered') || type.includes('granted') || type.includes('approved')) return '#10B981';
   if (type.includes('failed') || type.includes('blocked') || type.includes('rejected')) return '#EF4444';
   if (type.includes('approval_requested') || type.includes('escalat')) return '#F59E0B';
-  if (type.includes('executed') || type.includes('started') || type.includes('action_requested')) return 'var(--color-brand-primary)';
-  if (type.includes('agent_')) return 'var(--color-accent-gold)';
-  return 'var(--color-text-muted)';
+  if (type.includes('executed') || type.includes('started') || type.includes('action_requested')) return 'var(--accent-primary)';
+  if (type.includes('agent_') || type.includes('prediction') || type.includes('decision')) return 'var(--accent-secondary)';
+  return 'var(--muted)';
 }
 
 function eventLabel(type: string): string {
@@ -51,7 +52,7 @@ function JsonViewer({ data, label }: { data: Record<string, unknown> | null; lab
           style={{
             background: 'transparent',
             border: 'none',
-            color: copied ? '#10B981' : 'var(--color-text-muted)',
+            color: copied ? '#10B981' : 'var(--muted)',
             cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
@@ -148,20 +149,20 @@ export function AuditLogPage() {
   return (
     <div className={`animate-enter ${styles.page}`}>
       <PageHeader
-        label="Immutable Ledger"
-        title={caseId ? `TX Block #${caseId.slice(0, 8).toUpperCase()} Ledger` : 'Decentralized Audit Ledger'}
+        label="GOVERNANCE &amp; AUDIT"
+        title={caseId ? `Case CASE-${caseId.slice(0, 8).toUpperCase()} Decision Trail` : 'Decision Audit'}
         subtitle={
           caseId
-            ? `${entries.length} cryptographic events verified on this case ledger`
-            : 'Select any transaction in the Recovery Queue to inspect its full state history.'
+            ? `${entries.length} audited recovery events recorded for this payment case.`
+            : 'Select any recovery case in the Recovery Queue to inspect its complete decision history.'
         }
       />
 
       {!caseId && (
         <EmptyState
           icon="📋"
-          title="No Transaction Case Specified"
-          description="Open any case in the Tactical Recovery Queue and click 'Audit Timeline' or provide a valid case hash in the URL."
+          title="No Recovery Case Selected"
+          description="Open any case in the Recovery Queue and click 'Decision Trail' or provide a valid case ID in the URL to inspect its complete audit timeline."
         />
       )}
 
@@ -174,8 +175,8 @@ export function AuditLogPage() {
       {caseId && loading && (
         <div className={styles.loadingState}>
           <div className={styles.spinner} />
-          <span className="label-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-            VERIFYING IMMUTABLE AUDIT RECEIPTS…
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--muted)' }}>
+            LOADING DECISION AUDIT TRAIL…
           </span>
         </div>
       )}
@@ -183,9 +184,9 @@ export function AuditLogPage() {
       {caseId && !loading && !error && entries.length === 0 && (
         <EmptyState
           icon="⏳"
-          title="Genesis Block Only"
-          description="No downstream actions recorded yet. Trigger Analyze or Execution to append cryptographic events."
-          action={{ label: 'Refresh Ledger', onClick: load }}
+          title="Initial Case Created"
+          description="No recovery events recorded yet. Run analysis or execute an intervention to append decision audit entries."
+          action={{ label: 'Refresh Audit', onClick: load }}
         />
       )}
 
@@ -193,16 +194,16 @@ export function AuditLogPage() {
         <>
           <div className={styles.filterBar}>
             <div className={styles.searchBox}>
-              <Search size={14} color="var(--color-text-muted)" />
+              <Search size={14} color="var(--muted)" />
               <input
                 className={styles.searchInput}
                 type="text"
-                placeholder="Filter events or actors…"
+                placeholder="Filter events, models, or actors…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <span className="label-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+            <span className={styles.eventCounter}>
               Showing {displayedEntries.length} of {entries.length} events
             </span>
           </div>

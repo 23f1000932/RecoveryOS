@@ -1,84 +1,83 @@
 /*
- * RecoveryOS — Bitcoin DeFi Design System Tokens
- * Theme: "True Void" with "Bitcoin Fire" & "Digital Gold"
+ * RecoveryOS — Premium Fintech Revenue Recovery Design System Tokens
+ * Palette: Dark Wealth / Refined Charcoal with Warm Fintech Gold Accent
  */
 
 :root {
-  /* ── Core Cosmic Palette ─────────────────────────────────────────────────── */
-  --background: #030304;          /* True Void — deepest space where all begins */
-  --surface: #0F1115;             /* Dark Matter — elevated surfaces, panels, cards */
-  --surface-elevated: #171A21;    /* Higher elevation surface */
-  --surface-hover: #1E222B;       /* Card hover state */
-  --foreground: #FFFFFF;          /* Pure Light — primary text */
+  /* ── Core Surfaces ───────────────────────────────────────────────────────── */
+  --background: #06080D;          /* Deep obsidian charcoal background */
+  --surface: #0E131F;             /* Elevated dark fintech surface */
+  --surface-elevated: #151D2E;    /* Secondary elevation */
+  --surface-hover: #1A2438;       /* Hover state */
+  --foreground: #F8FAFC;          /* Warm crisp white for primary readability */
 
-  --muted: #94A3B8;               /* Stardust — descriptions, metadata */
-  --muted-foreground: #64748B;    /* Deeper muted */
+  --muted: #94A3B8;               /* Operational secondary text */
+  --muted-foreground: #64748B;    /* Deeper muted labels, footnotes */
 
-  /* ── Cryptographic Accents ───────────────────────────────────────────────── */
-  --accent-primary: #F7931A;      /* Bitcoin Orange — primary CTA, trust indicators */
-  --accent-secondary: #EA580C;    /* Burnt Orange — warm depth, gradient pair */
-  --accent-gold: #FFD600;         /* Digital Gold — value highlights, success, XP */
+  /* ── Financial Accent Tokens ─────────────────────────────────────────────── */
+  --accent-primary: #F59E0B;      /* Warm Fintech Gold — primary CTA, selected action */
+  --accent-secondary: #D97706;    /* Amber Gold — deep hover / gradient contrast */
+  --accent-gold: #FBBF24;         /* Luminous Gold — key metric highlight */
 
-  /* Aliases for compatibility */
+  /* Aliases */
   --accent: var(--accent-primary);
-  --accent-foreground: #FFFFFF;
-  --accent-muted: rgba(247, 147, 26, 0.12);
-  --accent-muted-hover: rgba(247, 147, 26, 0.20);
+  --accent-foreground: #06080D;
+  --accent-muted: rgba(245, 158, 11, 0.12);
+  --accent-muted-hover: rgba(245, 158, 11, 0.20);
 
-  /* ── Borders ─────────────────────────────────────────────────────────────── */
-  --border: #1E293B;              /* Dim Boundary — resting boundary */
-  --border-subtle: rgba(255, 255, 255, 0.08); /* 1px delicate line */
-  --border-strong: rgba(247, 147, 26, 0.40);  /* Glowing orange boundary */
-  --card: #0F1115;
-  --ring: #F7931A;
+  /* ── Borders & Outlines ─────────────────────────────────────────────────── */
+  --border: rgba(255, 255, 255, 0.08);          /* 1px clean architectural border */
+  --border-subtle: rgba(255, 255, 255, 0.05);   /* Divider lines */
+  --border-strong: rgba(245, 158, 11, 0.35);     /* Gold focus & emphasis */
+  --card: #0E131F;
+  --ring: #F59E0B;
 
-  /* ── Semantic Status Colors ──────────────────────────────────────────────── */
-  --success-text: #34D399;
-  --success-bg: rgba(16, 185, 129, 0.12);
-  --success-border: rgba(16, 185, 129, 0.35);
+  /* ── Semantic Financial Status ───────────────────────────────────────────── */
+  --success-text: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.10);
+  --success-border: rgba(16, 185, 129, 0.30);
 
-  --warning-text: #FBBF24;
-  --warning-bg: rgba(245, 158, 11, 0.12);
-  --warning-border: rgba(245, 158, 11, 0.35);
+  --warning-text: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.10);
+  --warning-border: rgba(245, 158, 11, 0.30);
 
-  --danger-text: #F87171;
-  --danger-bg: rgba(239, 68, 68, 0.12);
-  --danger-border: rgba(239, 68, 68, 0.35);
+  --danger-text: #EF4444;
+  --danger-bg: rgba(239, 68, 68, 0.10);
+  --danger-border: rgba(239, 68, 68, 0.30);
 
   --neutral-text: #94A3B8;
   --neutral-bg: rgba(255, 255, 255, 0.04);
-  --neutral-border: rgba(255, 255, 255, 0.10);
+  --neutral-border: rgba(255, 255, 255, 0.08);
 
-  /* ── Luminescence & Glow Shadows ─────────────────────────────────────────── */
-  --glow-orange-sm: 0 0 15px -3px rgba(234, 88, 12, 0.40);
-  --glow-orange: 0 0 25px -5px rgba(247, 147, 26, 0.55);
-  --glow-orange-lg: 0 0 35px -5px rgba(247, 147, 26, 0.70);
-  --glow-gold: 0 0 25px rgba(255, 214, 0, 0.35);
-  --shadow-elevation: 0 0 50px -10px rgba(247, 147, 26, 0.12);
+  /* ── Shadows & Subtle Atmospheric Glow ───────────────────────────────────── */
+  --glow-gold-sm: 0 0 15px -3px rgba(245, 158, 11, 0.25);
+  --glow-gold: 0 0 25px -5px rgba(245, 158, 11, 0.35);
+  --glow-gold-lg: 0 0 40px -5px rgba(245, 158, 11, 0.45);
+  --shadow-elevation: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.6);
-  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.8), var(--glow-orange-sm);
-  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.9), var(--glow-orange);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.85);
 
-  /* ── Typography Tokens ───────────────────────────────────────────────────── */
-  --font-heading: 'Space Grotesk', system-ui, -apple-system, sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  /* ── Typography Tokens (Fintech Intelligence Hierarchy) ──────────────────── */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
 
   /* Aliases */
   --font-serif: var(--font-heading);
   --font-sans: var(--font-body);
 
-  /* ── Spacing & Radii ─────────────────────────────────────────────────────── */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* ── Spacing & Radii (Restrained, Professional) ──────────────────────────── */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
   --radius-full: 9999px;
 
-  /* ── Motion Tokens ───────────────────────────────────────────────────────── */
+  /* ── Transitions ─────────────────────────────────────────────────────────── */
   --transition-fast: 150ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-base: 250ms cubic-bezier(0.16, 1, 0.3, 1);
-  --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-base: 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow: 350ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @media (prefers-reduced-motion: reduce) {

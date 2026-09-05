@@ -1,352 +1,379 @@
-/* CommandCenter — Bitcoin DeFi Theme Styles */
+/* RecoveryOS — Command Center Styles (Premium Fintech) */
 
 .page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 0 64px;
 }
 
 .content {
   display: flex;
   flex-direction: column;
-  gap: 2.25rem;
+  gap: 28px;
 }
 
-/* ── Hero 3D Orbital Banner ───────────────────────────────────────────────── */
+/* ── Hero Fintech Section ─────────────────────────────────────────────────── */
+
 .heroBanner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 2rem;
-  padding: 2.5rem;
-  border-radius: 20px;
-  background: linear-gradient(135deg, rgba(15, 17, 21, 0.95) 0%, rgba(23, 26, 33, 0.95) 100%);
-  border: 1px solid rgba(247, 147, 26, 0.25);
-  box-shadow: 0 0 50px -10px rgba(247, 147, 26, 0.15);
   position: relative;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.04) 0%, rgba(14, 19, 31, 0.95) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 32px 36px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   overflow: hidden;
-}
-
-.heroBanner::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 350px;
-  height: 100%;
-  background: radial-gradient(circle at 80% 50%, rgba(247, 147, 26, 0.12), transparent 70%);
-  pointer-events: none;
+  gap: 32px;
 }
 
 .heroText {
-  max-width: 650px;
-  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 720px;
 }
 
 .badgePill {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.85rem;
-  border-radius: 9999px;
-  background: rgba(247, 147, 26, 0.1);
-  border: 1px solid rgba(247, 147, 26, 0.3);
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 600;
-  color: #F7931A;
-  margin-bottom: 1rem;
+  color: var(--success-text);
+  letter-spacing: 0.05em;
+  width: fit-content;
 }
 
 .badgeDot {
   width: 6px;
   height: 6px;
-  border-radius: 9999px;
-  background-color: #F7931A;
-  box-shadow: 0 0 8px #F7931A;
-  animation: pingDot 1.5s infinite;
-}
-
-@keyframes pingDot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.4); opacity: 0.5; }
+  border-radius: 50%;
+  background: var(--success-text);
 }
 
 .heroTitle {
   font-family: var(--font-heading);
-  font-size: 2.25rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #FFFFFF;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
-  margin-bottom: 0.85rem;
+  line-height: 1.2;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
 }
 
 .heroSubtitle {
   font-family: var(--font-body);
-  font-size: 0.9375rem;
-  color: #94A3B8;
+  font-size: 1rem;
+  color: var(--muted);
   line-height: 1.6;
-  margin-bottom: 1.5rem;
 }
 
 .heroCtaRow {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 14px;
+  margin-top: 8px;
   flex-wrap: wrap;
 }
 
-/* 3D-Style Orbital Graphic */
-.orbContainer {
-  position: relative;
-  width: 170px;
-  height: 170px;
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  color: #06080D;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.btnPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.btnSecondary:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ── Hero Net Incremental Highlight Banner ────────────────────────────────── */
+
+.heroNetCard {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(14, 19, 31, 0.98) 100%);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  justify-content: space-between;
+  box-shadow: 0 8px 30px -8px rgba(245, 158, 11, 0.15);
+  flex-wrap: wrap;
+  gap: 20px;
 }
 
-.ringOuter {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  border: 2px dashed rgba(247, 147, 26, 0.4);
-  animation: spinSlow 18s linear infinite;
+.netLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.ringInner {
-  position: absolute;
-  width: 75%;
-  height: 75%;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 214, 0, 0.4);
-  animation: spinSlowReverse 12s linear infinite;
+.netEyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
 }
 
-.coreOrb {
-  width: 72px;
-  height: 72px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #EA580C 0%, #F7931A 50%, #FFD600 100%);
+.netValue {
+  font-family: var(--font-heading);
+  font-size: 2.75rem;
+  font-weight: 800;
+  color: var(--foreground);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.netDescription {
+  font-size: 0.875rem;
+  color: var(--muted);
+  max-width: 500px;
+}
+
+.netRightMeta {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 35px rgba(247, 147, 26, 0.7);
-  animation: float 6s ease-in-out infinite;
+  gap: 24px;
 }
 
-/* ── Section Headers ─────────────────────────────────────────────────────── */
+.netMetaItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+}
+
+.netMetaLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
+}
+
+.netMetaVal {
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+/* ── Section Dividers & Labels ───────────────────────────────────────────── */
+
 .sectionHeader {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
-  margin-bottom: 1rem;
-}
-
-.sectionIcon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: rgba(247, 147, 26, 0.15);
-  border: 1px solid rgba(247, 147, 26, 0.3);
-  color: #F7931A;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .sectionLabel {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 700;
   text-transform: uppercase;
-  color: #FFFFFF;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
 }
 
-/* ── Metrics Grid ─────────────────────────────────────────────────────────── */
+/* ── Financial Metrics Grid ──────────────────────────────────────────────── */
+
 .metricsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
 }
 
 .metricCard {
-  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px 22px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 0.75rem;
-  min-height: 135px;
+  gap: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--transition-fast);
 }
 
-.cardHeader {
+.metricCard:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.metricCardTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.metricLabel {
+.cardLabel {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #94A3B8;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
 }
 
-.pulseNode {
-  width: 6px;
-  height: 6px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.featuredCard {
-  border-color: rgba(247, 147, 26, 0.4);
-  background: linear-gradient(135deg, #0F1115 0%, #1A1713 100%);
-}
-
-.accentGold .pulseNode {
-  background: #FFD600;
-  box-shadow: 0 0 8px #FFD600;
-}
-.accentGold .metricValue {
-  color: #FFD600;
-  text-shadow: 0 0 15px rgba(255, 214, 0, 0.3);
-}
-
-.accentOrange .pulseNode {
-  background: #F7931A;
-  box-shadow: 0 0 8px #F7931A;
-}
-.accentOrange .metricValue {
-  color: #FFFFFF;
-}
-
-.accentGreen .pulseNode {
-  background: #10B981;
-  box-shadow: 0 0 8px #10B981;
-}
-.accentGreen .metricValue {
-  color: #34D399;
-}
-
-.accentCyan .pulseNode {
-  background: #38BDF8;
-  box-shadow: 0 0 8px #38BDF8;
-}
-
-.metricValue {
-  font-family: var(--font-mono);
-  font-size: 1.625rem;
+.cardValue {
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
-}
-
-.metricSub {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  color: #64748B;
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.35rem;
-}
-
-.metricSubValue {
-  color: #F7931A;
-  font-weight: 500;
-}
-
-/* ── Guardrail Stats ──────────────────────────────────────────────────────── */
-.guardrailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.25rem;
-}
-
-.guardrailStat {
-  background-color: #0F1115;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 1.35rem;
-  text-align: center;
-  transition: all 250ms ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.guardrailStat:hover {
-  transform: translateY(-2px);
-  border-color: rgba(247, 147, 26, 0.3);
-  box-shadow: 0 0 20px -5px rgba(247, 147, 26, 0.15);
-}
-
-.statIconBadge {
-  margin-bottom: 0.5rem;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.guardrailValue {
-  font-family: var(--font-mono);
-  font-size: 2rem;
-  font-weight: 700;
-  color: #FFFFFF;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
   line-height: 1.1;
 }
 
-.guardrailLabel {
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.subLabel {
+  color: var(--muted-foreground);
+  font-size: 0.75rem;
+}
+
+.subValue {
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.08em;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+/* ── Operational / Guardrail Secondary Stats ─────────────────────────────── */
+
+.secondaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.secondaryStatCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.secondaryStatVal {
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.secondaryStatLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  color: #94A3B8;
-  margin-top: 0.35rem;
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
 }
 
 /* ── Charts Grid ─────────────────────────────────────────────────────────── */
+
 .chartsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 20px;
 }
 
-/* Skeleton */
-.skeleton {
-  height: 2.5rem;
-  background: linear-gradient(90deg, #171A21 25%, #1E293B 50%, #171A21 75%);
-  background-size: 200% 100%;
-  border-radius: 8px;
-  animation: shimmer 1.5s infinite;
+.chartCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
 }
 
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+.chartHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
-@media (max-width: 900px) {
-  .heroBanner {
-    flex-direction: column;
-    text-align: center;
-    padding: 2rem 1.5rem;
-  }
-  .heroCtaRow {
-    justify-content: center;
-  }
-  .orbContainer {
-    margin-top: 1rem;
-  }
+.chartTitle {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.chartSubtitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-foreground);
+  margin-top: 3px;
+}
+
+.pendingAlertBanner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-full);
+  color: var(--accent-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.pendingAlertBanner:hover {
+  background: rgba(245, 158, 11, 0.2);
 }

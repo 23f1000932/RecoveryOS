@@ -1,4 +1,4 @@
-/* RecoveryOS — PoliciesPage Styles (Bitcoin DeFi Smart Contract Rules) */
+/* RecoveryOS — Guardrails & Policies Styles (Section 21 & 26) */
 
 .page {
   max-width: 1200px;
@@ -12,17 +12,17 @@
   gap: 24px;
 }
 
-/* ── Version Header Bar ─────────────────────────────────────────────────── */
+/* ── Policy Specification Bar ────────────────────────────────────────────── */
 
 .versionBar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-surface);
+  padding: 16px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -34,14 +34,14 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
-  color: var(--color-brand-primary);
-  background: rgba(247, 147, 26, 0.12);
-  border: 1px solid rgba(247, 147, 26, 0.35);
+  color: var(--accent-primary);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
   padding: 4px 12px;
   border-radius: var(--radius-full);
 }
 
-.immutablePill {
+.enforcedPill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -55,14 +55,14 @@
   border-radius: var(--radius-full);
 }
 
-/* ── Section Blocks ──────────────────────────────────────────────────────── */
+/* ── Policy Section Cards ────────────────────────────────────────────────── */
 
 .sectionCard {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  box-shadow: var(--shadow-surface);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-sm);
 }
 
 .sectionHeader {
@@ -71,7 +71,7 @@
   gap: 10px;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .sectionTitle {
@@ -80,7 +80,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-text-secondary);
+  color: var(--muted-foreground);
 }
 
 .grid {
@@ -92,139 +92,191 @@
 /* ── Policy Metric Tile ──────────────────────────────────────────────────── */
 
 .policyTile {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 20px;
   transition: all var(--transition-fast);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 10px;
 }
 
 .policyTile:hover {
-  border-color: rgba(247, 147, 26, 0.3);
-  background: rgba(247, 147, 26, 0.02);
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .tileHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
 }
 
 .tileLabel {
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .valueRow {
   display: flex;
   align-items: baseline;
-  gap: 8px;
+  gap: 6px;
 }
 
 .valuePrimary {
-  font-family: var(--font-mono);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  letter-spacing: -0.02em;
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.1;
 }
 
 .valueUnit {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
 
 .tileDescription {
-  margin-top: 10px;
-  font-size: 11px;
-  color: var(--color-text-muted);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Interactive Policy Simulator (Section 26) ───────────────────────────── */
+
+.testerCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.testerHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.testerTitle {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--foreground);
+}
+
+.testerDesc {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
   line-height: 1.5;
 }
 
-/* ── Interactive Smart Contract Threshold Tester ─────────────────────────── */
-
-.testerCard {
-  background: linear-gradient(135deg, rgba(247, 147, 26, 0.05) 0%, rgba(15, 17, 21, 0.95) 100%);
-  border: 1px solid rgba(247, 147, 26, 0.3);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-}
-
 .testerRow {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
-  flex-wrap: wrap;
-  margin-top: 16px;
+  align-items: flex-end;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .testerInputWrapper {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.testerInputLabel {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-foreground);
 }
 
 .testerInput {
-  background: var(--color-bg-base);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
-  padding: 10px 14px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   border-radius: var(--radius-md);
+  padding: 10px 14px;
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 700;
-  width: 200px;
+  font-weight: 600;
+  outline: none;
+  transition: border-color var(--transition-fast);
 }
 
 .testerInput:focus {
-  outline: none;
-  border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.2);
+  border-color: var(--accent-primary);
+}
+
+.testerOutcomeCol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.testerOutcomeBadges {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .testerOutcomeBadge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: var(--radius-full);
+  gap: 6px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 0.03em;
 }
 
-/* ── Immutability Notice ─────────────────────────────────────────────────── */
+/* ── Merchant Policy Configuration Notice ────────────────────────────────── */
 
 .noticeCard {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 20px 24px;
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 14px;
+  padding: 18px 22px;
+  background: rgba(245, 158, 11, 0.04);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: var(--radius-lg);
 }
 
 .noticeText {
   font-size: 13px;
-  color: var(--color-text-secondary);
-  line-height: 1.6;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.noticeText strong {
+  color: var(--foreground);
 }
 
 .noticeText code {
   font-family: var(--font-mono);
-  color: var(--color-brand-primary);
-  background: rgba(247, 147, 26, 0.1);
+  color: var(--accent-primary);
+  background: rgba(245, 158, 11, 0.08);
   padding: 2px 6px;
   border-radius: var(--radius-sm);
+  font-size: 12px;
 }

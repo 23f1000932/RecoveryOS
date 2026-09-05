@@ -1,19 +1,11 @@
 /**
- * RecoveryOS — Case Detail Page (Bitcoin DeFi Block Forensics Overhaul)
- *
- * Sections:
- *   1. Payment & Customer Context Cards
- *   2. Holographic Gemini Agent Decision & Latent Explanation
- *   3. Candidate Actions Matrix + Expected Net Alpha Bar Chart
- *   4. Cryptographic Guardrail Checks
- *   5. State-Gated Action Buttons with Gamification XP Triggers
- *   6. Ledger Audit Timeline
+ * RecoveryOS — Case Detail Page
+ * Comprehensive forensic view answering what failed, why, recommended action, and guardrails.
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
-  Sparkles,
   ShieldCheck,
   ShieldAlert,
   Play,
@@ -21,12 +13,12 @@ import {
   CheckCircle2,
   XCircle,
   Coins,
-  Terminal,
   UserCheck,
   CreditCard,
   Layers,
   ChevronDown,
   ChevronUp,
+  AlertCircle,
 } from 'lucide-react';
 import { ActionBarChart } from '../components/charts/ActionBarChart';
 import { CaseStatusBadge, ActionBadge, ApprovalBadge } from '../components/controls/StatusBadge';
@@ -34,18 +26,17 @@ import { EmptyState } from '../components/layout/EmptyState';
 import { ErrorBanner } from '../components/layout/ErrorBanner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api, formatAction, formatINR } from '../services/api';
-import { gamification } from '../services/gamification';
 import type { AuditLogEntry, RecoveryCaseDetail as CaseDetailType } from '../types';
 import styles from './CaseDetail.module.css';
 
 const TERMINAL: string[] = ['RECOVERED', 'STOPPED', 'ESCALATED', 'FAILED', 'EXPIRED'];
 
 function auditEventColor(type: string): string {
-  if (type.includes('recovered') || type.includes('granted') || type.includes('approved')) return '#10B981';
+  if (type.includes('recovered') || type.includes('granted') || type.includes('approved')) return 'var(--success-text)';
   if (type.includes('failed') || type.includes('blocked') || type.includes('rejected')) return '#EF4444';
   if (type.includes('approval_requested') || type.includes('escalat')) return '#F59E0B';
-  if (type.includes('executed') || type.includes('started')) return 'var(--color-brand-primary)';
-  return 'var(--color-text-muted)';
+  if (type.includes('executed') || type.includes('started')) return 'var(--accent-primary)';
+  return 'var(--muted-foreground)';
 }
 
 function auditLabel(type: string): string {
@@ -53,20 +44,20 @@ function auditLabel(type: string): string {
 }
 
 function JsonSnapshot({ data }: { data: Record<string, unknown> | null }) {
-  if (!data || !Object.keys(data).length) return <span style={{ color: 'var(--color-text-muted)' }}>—</span>;
+  if (!data || !Object.keys(data).length) return <span style={{ color: 'var(--muted-foreground)' }}>—</span>;
   return (
     <pre
       style={{
         fontSize: 11,
-        color: '#9CA3AF',
-        background: 'rgba(0, 0, 0, 0.5)',
-        borderRadius: 6,
-        padding: '10px 12px',
+        color: '#CBD5E1',
+        background: 'rgba(0, 0, 0, 0.4)',
+        borderRadius: 4,
+        padding: '8px 12px',
         overflowX: 'auto',
         maxHeight: 160,
         margin: 0,
         fontFamily: 'var(--font-mono)',
-        border: '1px solid var(--color-border-subtle)',
+        border: '1px solid var(--border-subtle)',
       }}
     >
       {JSON.stringify(data, null, 2)}
@@ -79,8 +70,8 @@ function AuditTimeline({ entries }: { entries: AuditLogEntry[] }) {
     return (
       <EmptyState
         icon="📋"
-        title="No Audit Blocks Yet"
-        description="Immutable events append here in real-time as state transitions occur."
+        title="No Recovery Events Recorded Yet"
+        description="Events appear here as the recovery pipeline evaluates and executes actions."
       />
     );
   }
@@ -101,11 +92,11 @@ function AuditTimeline({ entries }: { entries: AuditLogEntry[] }) {
           <div className={styles.auditBody}>
             <div className={styles.auditSnapshots}>
               <div>
-                <p className={styles.snapshotLabel}>Input State Block</p>
+                <p className={styles.snapshotLabel}>Input State</p>
                 <JsonSnapshot data={e.input_snapshot} />
               </div>
               <div>
-                <p className={styles.snapshotLabel}>Output State Block</p>
+                <p className={styles.snapshotLabel}>Output State</p>
                 <JsonSnapshot data={e.output_snapshot} />
               </div>
             </div>
@@ -133,9 +124,9 @@ function CandidateTable({
             <th>Rank</th>
             <th>Candidate Action</th>
             <th>P(Success)</th>
-            <th>Expected Net Alpha</th>
-            <th>Compute / Cost</th>
-            <th>Consensus Status</th>
+            <th>Expected Net Revenue</th>
+            <th>Cost</th>
+            <th>Guardrail Status</th>
           </tr>
         </thead>
         <tbody>
@@ -155,7 +146,7 @@ function CandidateTable({
                 </div>
               </td>
               <td>{(c.probability * 100).toFixed(1)}%</td>
-              <td style={{ color: 'var(--color-accent-gold)', fontWeight: 600 }}>
+              <td style={{ color: 'var(--accent-gold)', fontWeight: 600 }}>
                 {formatINR(c.expected_net_revenue)}
               </td>
               <td>{formatINR(c.intervention_cost)}</td>
@@ -164,7 +155,7 @@ function CandidateTable({
                   <span className={styles.allowedTag}>✓ Allowed</span>
                 ) : (
                   <span className={styles.blockedTag} title={c.blocked_reason ?? ''}>
-                    ✗ Blocked: {c.blocked_reason?.slice(0, 20)}…
+                    ✗ Blocked: {c.blocked_reason?.slice(0, 24)}…
                   </span>
                 )}
               </td>
@@ -221,18 +212,13 @@ export function CaseDetailPage() {
     setShowAudit((v) => !v);
   };
 
-  const doAction = async (
-    fn: () => Promise<unknown>,
-    successMsg: string,
-    onSuccessReward?: () => void,
-  ) => {
+  const doAction = async (fn: () => Promise<unknown>, successMsg: string) => {
     if (actionPending) return;
     setActionPending(true);
     setActionMessage(null);
     try {
       await fn();
       setActionMessage(successMsg);
-      if (onSuccessReward) onSuccessReward();
       load();
       loadAudit();
     } catch (e: unknown) {
@@ -245,10 +231,10 @@ export function CaseDetailPage() {
   if (loading) {
     return (
       <div className={styles.page}>
-        <div className={styles.loadingFill} aria-label="Loading case…">
+        <div className={styles.loadingFill} aria-label="Loading recovery case…">
           <div className={styles.spinner} />
-          <span className="label-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
-            DECRYPTING BLOCK FORENSICS…
+          <span className="label-mono">
+            LOADING PAYMENT CASE CONTEXT…
           </span>
         </div>
       </div>
@@ -258,8 +244,8 @@ export function CaseDetailPage() {
   if (error || !caseData) {
     return (
       <div className={styles.page}>
-        <PageHeader title="Block Not Found" />
-        <ErrorBanner message={error ?? 'Case transaction data unavailable.'} onRetry={load} />
+        <PageHeader title="Case Not Found" />
+        <ErrorBanner message={error ?? 'Payment recovery case data is unavailable.'} onRetry={load} />
       </div>
     );
   }
@@ -277,22 +263,22 @@ export function CaseDetailPage() {
     <div className={`animate-enter ${styles.page}`}>
       {/* ── Page Header ───────────────────────────────────────────────────────── */}
       <PageHeader
-        label="Block Forensics"
-        title={`TX Block #${caseData.id.slice(0, 8).toUpperCase()}`}
-        subtitle={`Payment Identifier: ${caseData.external_payment_id || caseData.payment_id} · Merkle Root Verified`}
+        label="Case Detail"
+        title={`Recovery Case: CASE-${caseData.id.slice(0, 8).toUpperCase()}`}
+        subtitle={`Razorpay Payment ID: ${caseData.external_payment_id || caseData.payment_id}`}
       />
 
       {/* ── Status Bar ───────────────────────────────────────────────────────── */}
       <div className={styles.statusBar}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <CaseStatusBadge status={caseData.status} />
           {caseData.selected_action && <ActionBadge action={caseData.selected_action} />}
           <ApprovalBadge status={caseData.approval_status} />
         </div>
         {caseData.requires_approval && (
           <span className={styles.approvalWarning}>
-            <ShieldAlert size={14} />
-            Multi-Sig Consensus Required
+            <ShieldAlert size={13} />
+            Approval Required
           </span>
         )}
       </div>
@@ -300,6 +286,51 @@ export function CaseDetailPage() {
       {actionMessage && (
         <div style={{ marginBottom: 16 }}>
           <ErrorBanner message={actionMessage} />
+        </div>
+      )}
+
+      {/* ── Dedicated Approval Required Callout (Section 23) ────────────────── */}
+      {caseData.requires_approval && caseData.status === 'PENDING_APPROVAL' && (
+        <div className={styles.approvalPanel}>
+          <div className={styles.approvalPanelHeader}>
+            <ShieldAlert size={16} />
+            <span>Merchant Approval Required Prior to Execution</span>
+          </div>
+
+          <div className={styles.approvalDetails}>
+            <div className={styles.approvalItem}>
+              <span className={styles.approvalLabel}>Amount at Risk</span>
+              <span className={styles.approvalValue}>{formatINR(caseData.payment_amount)}</span>
+            </div>
+            <div className={styles.approvalItem}>
+              <span className={styles.approvalLabel}>Recommended Action</span>
+              <span className={styles.approvalValue}>
+                {caseData.selected_action ? formatAction(caseData.selected_action) : '—'}
+              </span>
+            </div>
+            <div className={styles.approvalItem}>
+              <span className={styles.approvalLabel}>Expected Net Revenue</span>
+              <span className={styles.approvalValue} style={{ color: 'var(--accent-gold)' }}>
+                {formatINR(caseData.expected_net_revenue)}
+              </span>
+            </div>
+            <div className={styles.approvalItem}>
+              <span className={styles.approvalLabel}>Model Confidence</span>
+              <span className={styles.approvalValue}>
+                {(() => {
+                  const sel = caseData.candidates?.find((c) => c.action === caseData.selected_action);
+                  const conf = sel?.confidence ?? sel?.probability;
+                  return conf ? `${(conf * 100).toFixed(0)}%` : '—';
+                })()}
+              </span>
+            </div>
+          </div>
+
+          <p className={styles.approvalReasonText}>
+            <strong>Why approval is required:</strong>{' '}
+            {caseData.guardrail_result?.approval_reason ||
+              'Payment amount exceeds the automatic execution threshold under current merchant policy.'}
+          </p>
         </div>
       )}
 
@@ -311,62 +342,64 @@ export function CaseDetailPage() {
           <section className={styles.cardSection}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
-                <CreditCard size={15} color="var(--color-brand-primary)" />
-                <span>Transaction Metadata</span>
+                <CreditCard size={14} color="var(--accent-primary)" />
+                <span>Payment Context</span>
               </div>
             </div>
             <div className={styles.contextGrid}>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Payment Amount</span>
+                <span className={styles.ctxLabel}>Amount</span>
                 <span className={`${styles.ctxValue} ${styles.ctxHighlight}`}>
                   {formatINR(caseData.payment_amount)}
                 </span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Payment Gateway</span>
+                <span className={styles.ctxLabel}>Payment Method</span>
                 <span className={styles.ctxValue}>{caseData.payment_method?.toUpperCase() ?? 'UPI'}</span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Error Code</span>
+                <span className={styles.ctxLabel}>Failure Code</span>
                 <span className={styles.ctxValue} style={{ color: '#EF4444' }}>
                   {caseData.payment_failure_code ?? 'DECLINED'}
                 </span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Attempt Counter</span>
-                <span className={styles.ctxValue}>{caseData.payment_attempt_number ?? 1} / 3</span>
+                <span className={styles.ctxLabel}>Attempt Number</span>
+                <span className={styles.ctxValue}>{caseData.payment_attempt_number ?? 1}</span>
               </div>
             </div>
           </section>
 
-          {/* Customer History Card */}
+          {/* Customer Context Card */}
           <section className={styles.cardSection}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
-                <UserCheck size={15} color="var(--color-brand-primary)" />
-                <span>Customer Credibility Score</span>
+                <UserCheck size={14} color="var(--accent-primary)" />
+                <span>Customer History</span>
               </div>
             </div>
             <div className={styles.contextGrid}>
               <div className={styles.contextItem}>
                 <span className={styles.ctxLabel}>Historic Success Rate</span>
-                <span className={styles.ctxValue} style={{ color: '#10B981' }}>
+                <span className={styles.ctxValue} style={{ color: 'var(--success-text)' }}>
                   {caseData.customer_success_rate != null
                     ? `${(caseData.customer_success_rate * 100).toFixed(0)}%`
-                    : '92%'}
+                    : '—'}
                 </span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Total TX Lifetime</span>
-                <span className={styles.ctxValue}>{caseData.customer_transaction_count ?? 18}</span>
+                <span className={styles.ctxLabel}>Total Transactions</span>
+                <span className={styles.ctxValue}>{caseData.customer_transaction_count ?? '—'}</span>
               </div>
               <div className={styles.contextItem}>
                 <span className={styles.ctxLabel}>Prior Failures</span>
-                <span className={styles.ctxValue}>{caseData.customer_failure_count ?? 1}</span>
+                <span className={styles.ctxValue}>{caseData.customer_failure_count ?? '—'}</span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Average Basket Value</span>
-                <span className={styles.ctxValue}>{formatINR(caseData.customer_avg_amount || caseData.payment_amount)}</span>
+                <span className={styles.ctxLabel}>Average Transaction</span>
+                <span className={styles.ctxValue}>
+                  {formatINR(caseData.customer_avg_amount || caseData.payment_amount)}
+                </span>
               </div>
             </div>
           </section>
@@ -375,8 +408,8 @@ export function CaseDetailPage() {
           <section className={styles.cardSection}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
-                <Coins size={15} color="var(--color-accent-gold)" />
-                <span>Alpha Ledger Breakdown</span>
+                <Coins size={14} color="var(--accent-gold)" />
+                <span>Financial Recovery Summary</span>
               </div>
             </div>
             <div className={styles.contextGrid}>
@@ -385,32 +418,32 @@ export function CaseDetailPage() {
                 <span className={styles.ctxValue}>{formatINR(caseData.revenue_at_risk)}</span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Expected Net Alpha</span>
-                <span className={styles.ctxValue} style={{ color: 'var(--color-accent-gold)' }}>
+                <span className={styles.ctxLabel}>Expected Net Revenue</span>
+                <span className={styles.ctxValue} style={{ color: 'var(--accent-gold)' }}>
                   {formatINR(caseData.expected_net_revenue)}
                 </span>
               </div>
               <div className={styles.contextItem}>
                 <span className={styles.ctxLabel}>Actual Recovered</span>
-                <span className={styles.ctxValue} style={{ color: '#10B981' }}>
+                <span className={styles.ctxValue} style={{ color: 'var(--success-text)' }}>
                   {caseData.actual_recovered ? formatINR(caseData.actual_recovered) : '—'}
                 </span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Net Incremental</span>
-                <span className={styles.ctxValue} style={{ color: 'var(--color-brand-primary)' }}>
+                <span className={styles.ctxLabel}>Net Incremental Recovery</span>
+                <span className={styles.ctxValue}>
                   {caseData.net_incremental_recovery ? formatINR(caseData.net_incremental_recovery) : '—'}
                 </span>
               </div>
             </div>
           </section>
 
-          {/* Action Command Console */}
+          {/* Governance Execution Console */}
           <section className={styles.cardSection}>
             <div className={styles.cardHeader}>
               <div className={styles.cardTitle}>
-                <Terminal size={15} color="var(--color-brand-primary)" />
-                <span>Execution Governance Console</span>
+                <Zap size={14} color="var(--accent-primary)" />
+                <span>Recovery Governance Actions</span>
               </div>
             </div>
             <div className={styles.actionButtons}>
@@ -421,17 +454,12 @@ export function CaseDetailPage() {
                 onClick={() =>
                   doAction(
                     () => api.analyzeCase(caseId!),
-                    'AI Forensics analysis completed.',
-                    () => {
-                      gamification.addXP(50, "Forensics Re-Analysis Completed");
-                      gamification.incrementStreak();
-                      gamification.unlockBadge("GENESIS_ANALYSIS");
-                    },
+                    'Payment analysis completed.',
                   )
                 }
               >
                 <Zap size={14} />
-                {actionPending ? 'Analyzing…' : '⚡ Re-Analyze'}
+                {actionPending ? 'Analyzing…' : 'Analyze Payment'}
               </button>
 
               {canApprove && (
@@ -442,22 +470,12 @@ export function CaseDetailPage() {
                   onClick={() =>
                     doAction(
                       () => api.approveCase(caseId!),
-                      'Multi-sig consensus confirmed. Case approved for execution.',
-                      () => {
-                        const amount = parseFloat(caseData.payment_amount) || 0;
-                        gamification.addXP(150, "Multi-Sig Consensus Approved", amount);
-                        gamification.incrementStreak();
-                        if (amount >= 10000) {
-                          gamification.unlockBadge("WHALE_SAVER");
-                        }
-                        gamification.unlockBadge("ZERO_BREACH");
-                        gamification.fireCelebration(false);
-                      },
+                      'Case approved for execution.',
                     )
                   }
                 >
-                  <CheckCircle2 size={15} />
-                  ✓ Multi-Sig Approve (+150 XP)
+                  <CheckCircle2 size={14} />
+                  Approve Recovery
                 </button>
               )}
 
@@ -469,13 +487,12 @@ export function CaseDetailPage() {
                   onClick={() =>
                     doAction(
                       () => api.rejectCase(caseId!),
-                      'Case flagged and rejected by governance.',
-                      () => gamification.resetStreak(),
+                      'Case rejected by merchant policy.',
                     )
                   }
                 >
                   <XCircle size={14} />
-                  ✗ Reject & Halt
+                  Reject
                 </button>
               )}
 
@@ -487,18 +504,12 @@ export function CaseDetailPage() {
                   onClick={() =>
                     doAction(
                       () => api.executeCase(caseId!),
-                      'Recovery action adapter deployed successfully.',
-                      () => {
-                        const amount = parseFloat(caseData.payment_amount) || 0;
-                        gamification.addXP(200, "Lightning Recovery Action Executed", amount);
-                        gamification.unlockBadge("LIGHTNING_EXECUTE");
-                        gamification.fireCelebration(true);
-                      },
+                      'Recovery action executed successfully.',
                     )
                   }
                 >
-                  <Play size={15} fill="currentColor" />
-                  ▶ Lightning Execute (+200 XP)
+                  <Play size={14} fill="currentColor" />
+                  Execute Action
                 </button>
               )}
 
@@ -510,11 +521,11 @@ export function CaseDetailPage() {
                   onClick={() =>
                     doAction(
                       () => api.stopCase(caseId!),
-                      'Recovery protocol permanently stopped.',
+                      'Recovery process stopped.',
                     )
                   }
                 >
-                  ⏹ Halt
+                  Stop Recovery
                 </button>
               )}
             </div>
@@ -522,30 +533,28 @@ export function CaseDetailPage() {
             {/* State gate explanation */}
             {!canExecute && !canApprove && !isTerminal && (
               <p className={styles.gateHint}>
-                {caseData.status === 'CREATED' && 'Run Analyze above to initiate 10-stage forensic pipeline.'}
-                {caseData.status === 'ANALYZING' && 'Mining rig is synthesizing latent recovery strategies…'}
-                {caseData.status === 'PENDING_APPROVAL' && 'Awaiting merchant multi-sig consensus before deployment.'}
+                {caseData.status === 'CREATED' && 'Click Analyze to generate an AI recovery decision.'}
+                {caseData.status === 'ANALYZING' && 'Evaluating recovery models and guardrails…'}
+                {caseData.status === 'PENDING_APPROVAL' && 'Awaiting merchant approval before execution.'}
               </p>
             )}
             {isTerminal && (
               <p className={styles.gateHint}>
-                Case has settled in terminal state ({caseData.status}) — state is cryptographically locked.
+                Case settled in terminal state ({caseData.status.toLowerCase()}) — no further actions available.
               </p>
             )}
           </section>
         </div>
 
-        {/* ── RIGHT COLUMN: AI Intelligence & Candidate Matrix ─────────────────── */}
+        {/* ── RIGHT COLUMN: AI Intelligence & Candidate Comparison ─────────────── */}
         <div className={styles.rightCol}>
-          {/* Holographic Gemini Agent Card */}
-          <section className={styles.hologramCard}>
-            <div className={styles.hologramHeader}>
-              <div className={styles.hologramTag}>
-                <Sparkles size={16} color="var(--color-brand-primary)" />
-                <span>GEMINI 2.5 PRO · LATENT FORENSIC AGENT</span>
-              </div>
-              <span className="label-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
-                {caseData.model_name ? `${caseData.model_name} v${caseData.model_version}` : 'Autonomous Consensus'}
+          {/* AI Recommendation Card */}
+          <section className={styles.aiDecisionCard}>
+            <div className={styles.decisionHeader}>
+              <span className={styles.decisionLabel}>AI Recommendation</span>
+              <span className={styles.modelMeta}>
+                {caseData.model_name ? `${caseData.model_name} v${caseData.model_version}` : 'RecoveryOS AI'}
+                {caseData.policy_version && ` · Policy: ${caseData.policy_version}`}
               </span>
             </div>
 
@@ -553,8 +562,8 @@ export function CaseDetailPage() {
               <>
                 <div className={styles.decisionBanner}>
                   <div>
-                    <span className="label-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
-                      RECOMMENDED STRATEGY
+                    <span className="label-mono" style={{ fontSize: 10, color: 'var(--muted-foreground)' }}>
+                      OPTIMAL INTERVENTION
                     </span>
                     <div className={styles.decisionActionName}>
                       {formatAction(caseData.selected_action)}
@@ -562,6 +571,17 @@ export function CaseDetailPage() {
                   </div>
                   <ActionBadge action={caseData.selected_action} />
                 </div>
+
+                {/* Explicit "Do Nothing" Communication (Section 20) */}
+                {caseData.selected_action === 'do_nothing' && (
+                  <div className={styles.doNothingAlert}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, marginBottom: 4 }}>
+                      <AlertCircle size={15} color="var(--accent-primary)" />
+                      <span>Positive Decision: Do Nothing</span>
+                    </div>
+                    Recovery is not economically justified under current merchant policy. The expected intervention cost exceeds the expected recovery probability.
+                  </div>
+                )}
 
                 {caseData.agent_explanation && (
                   <div className={styles.explanationBox}>
@@ -572,19 +592,19 @@ export function CaseDetailPage() {
             ) : (
               <EmptyState
                 icon="🤖"
-                title="Model Standing By"
-                description="Trigger Re-Analyze in the governance console to synthesize the optimal recovery strategy."
+                title="No Decision Yet"
+                description="Click 'Analyze Payment' to evaluate candidate actions and generate an AI decision."
               />
             )}
           </section>
 
-          {/* Guardrail Matrix */}
+          {/* Guardrail Verification Summary */}
           {caseData.guardrail_result && (
             <section className={styles.cardSection}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>
-                  <ShieldCheck size={16} color="#10B981" />
-                  <span>Smart Contract Guardrail Verification</span>
+                  <ShieldCheck size={14} color="var(--success-text)" />
+                  <span>Deterministic Guardrail Verification</span>
                 </div>
               </div>
 
@@ -596,7 +616,7 @@ export function CaseDetailPage() {
                   VERDICT: {caseData.guardrail_result.overall_outcome.replace('_', ' ').toUpperCase()}
                 </span>
                 {caseData.guardrail_result.approval_reason && (
-                  <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  <span style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)' }}>
                     {caseData.guardrail_result.approval_reason}
                   </span>
                 )}
@@ -606,11 +626,11 @@ export function CaseDetailPage() {
                 {caseData.guardrail_result.checks.map((c) => (
                   <div key={c.check_name} className={styles.guardrailCheckItem}>
                     {c.passed ? (
-                      <CheckCircle2 size={14} color="#10B981" />
+                      <CheckCircle2 size={13} color="var(--success-text)" />
                     ) : (
-                      <XCircle size={14} color="#EF4444" />
+                      <XCircle size={13} color="#EF4444" />
                     )}
-                    <span style={{ color: c.passed ? 'var(--color-text-secondary)' : '#EF4444' }}>
+                    <span style={{ color: c.passed ? 'var(--foreground)' : '#EF4444' }}>
                       {c.check_name.replace(/_/g, ' ')}
                     </span>
                   </div>
@@ -619,13 +639,13 @@ export function CaseDetailPage() {
             </section>
           )}
 
-          {/* Candidate Actions Matrix & Chart */}
+          {/* Candidate Actions Comparison (Section 19) */}
           {caseData.candidates.length > 0 && (
             <section className={styles.cardSection}>
               <div className={styles.cardHeader}>
                 <div className={styles.cardTitle}>
-                  <Layers size={16} color="var(--color-brand-primary)" />
-                  <span>Candidate Action Matrix</span>
+                  <Layers size={14} color="var(--accent-primary)" />
+                  <span>Action Candidates Comparison</span>
                 </div>
               </div>
 
@@ -634,9 +654,9 @@ export function CaseDetailPage() {
                 recommendedAction={caseData.selected_action}
               />
 
-              <div style={{ marginTop: 24 }}>
-                <p className="label-mono" style={{ marginBottom: 12, fontSize: 11 }}>
-                  Expected Net Alpha by Candidate (₹)
+              <div style={{ marginTop: 20 }}>
+                <p className="label-mono" style={{ marginBottom: 10 }}>
+                  Expected Net Revenue by Action
                 </p>
                 <ActionBarChart
                   candidates={caseData.candidates}
@@ -648,13 +668,12 @@ export function CaseDetailPage() {
         </div>
       </div>
 
-      {/* ── Ledger Audit Timeline ────────────────────────────────────────────── */}
+      {/* ── Decision Audit Trail (Section 27) ─────────────────────────────────── */}
       <section className={styles.cardSection} style={{ marginTop: 24 }}>
         <div className={styles.auditHeader} onClick={toggleAudit} role="button" tabIndex={0}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Terminal size={16} color="var(--color-brand-primary)" />
-            <span className="label-mono" style={{ fontSize: 12, fontWeight: 700 }}>
-              IMMUTABLE AUDIT LOG &amp; CRYPTOGRAPHIC RECEIPTS
+            <span className="label-mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--foreground)' }}>
+              DECISION AUDIT TRAIL
             </span>
           </div>
           <span className={styles.auditToggle}>
@@ -664,14 +683,14 @@ export function CaseDetailPage() {
               </span>
             ) : (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <ChevronDown size={14} /> Expand Timeline
+                <ChevronDown size={14} /> View Audit Events
               </span>
             )}
           </span>
         </div>
         {showAudit &&
           (auditLoading ? (
-            <div className={styles.loadingFill} style={{ minHeight: 120 }}>
+            <div className={styles.loadingFill} style={{ minHeight: 100 }}>
               <div className={styles.spinner} />
             </div>
           ) : (
@@ -681,3 +700,5 @@ export function CaseDetailPage() {
     </div>
   );
 }
+
+export default CaseDetailPage;

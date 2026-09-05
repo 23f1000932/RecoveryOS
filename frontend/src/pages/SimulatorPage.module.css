@@ -1,7 +1,7 @@
-/* RecoveryOS — SimulatorPage Styles (Bitcoin DeFi Mining Rig Overhaul) */
+/* RecoveryOS — Recovery Simulation Lab Styles */
 
 .page {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 0 64px;
 }
@@ -12,88 +12,146 @@
   gap: 24px;
 }
 
-/* ── Rig Terminal & Configuration Card ───────────────────────────────────── */
+/* ── Visual Story Architecture Card (Section 25) ─────────────────────────── */
 
-.rigTerminal {
-  position: relative;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 24px;
-  box-shadow: var(--shadow-surface);
-  overflow: hidden;
-  transition: border-color var(--transition-normal);
+.storyCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 28px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.rigTerminal:hover {
-  border-color: rgba(247, 147, 26, 0.3);
+.storyHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.rigTerminalRunning {
-  border-color: var(--color-brand-primary);
-  box-shadow: 0 0 30px rgba(247, 147, 26, 0.15);
+.storyEyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
 }
 
-.rigHeader {
+.storyPipeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.storyNode {
+  flex: 1;
+  min-width: 200px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.storyNodeHighlight {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.nodeTitle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.nodeDesc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.storyArrow {
+  color: var(--muted-foreground);
+  display: flex;
+  align-items: center;
+}
+
+/* ── Simulation Configuration Card ───────────────────────────────────────── */
+
+.configCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.configHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
   padding-bottom: 14px;
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
   flex-wrap: wrap;
   gap: 12px;
 }
 
-.rigTitleGroup {
+.configTitleGroup {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.rigStatusPill {
+.configStatusPill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: var(--radius-full);
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  border: 1px solid var(--border);
+  color: var(--muted);
 }
 
-.rigStatusPillActive {
-  background: rgba(247, 147, 26, 0.12);
-  border-color: rgba(247, 147, 26, 0.4);
-  color: var(--color-brand-primary);
-  box-shadow: 0 0 12px rgba(247, 147, 26, 0.2);
+.configStatusActive {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: var(--accent-primary);
 }
 
 .statusDotPulse {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--color-brand-primary);
-  box-shadow: 0 0 8px var(--color-brand-primary);
+  background: var(--accent-primary);
   animation: pulse 1.5s infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
-
-/* ── Form Controls & Presets ──────────────────────────────────────────────── */
 
 .configGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 20px;
 }
 
@@ -106,9 +164,10 @@
 .fieldLabel {
   font-family: var(--font-mono);
   font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -123,25 +182,24 @@
 .chip {
   padding: 4px 10px;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border-subtle);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .chip:hover {
-  background: rgba(247, 147, 26, 0.08);
-  border-color: rgba(247, 147, 26, 0.3);
-  color: var(--color-brand-primary);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--foreground);
 }
 
 .chipActive {
-  background: rgba(247, 147, 26, 0.15);
-  border-color: var(--color-brand-primary);
-  color: var(--color-brand-primary);
+  background: rgba(245, 158, 11, 0.12);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
   font-weight: 600;
 }
 
@@ -153,28 +211,27 @@
 
 .numberInput {
   flex: 1;
-  background: var(--color-bg-base);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-primary);
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--foreground);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
+  padding: 9px 14px;
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 600;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition: border-color var(--transition-fast);
 }
 
 .numberInput:focus {
   outline: none;
-  border-color: var(--color-brand-primary);
-  box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.2);
+  border-color: var(--accent-primary);
 }
 
 .randomBtn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
-  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 9px 12px;
   border-radius: var(--radius-md);
   cursor: pointer;
   display: flex;
@@ -184,131 +241,87 @@
 }
 
 .randomBtn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--foreground);
 }
-
-/* ── Execute Action Row ──────────────────────────────────────────────────── */
 
 .actionRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding-top: 16px;
-  border-top: 1px solid var(--color-border-subtle);
+  border-top: 1px solid var(--border-subtle);
   flex-wrap: wrap;
   gap: 16px;
 }
 
-.rigTelemetryInfo {
+.telemetrySummary {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-text-muted);
+  font-size: 11px;
+  color: var(--muted-foreground);
 }
 
-.telemetryItem {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.telemetryVal {
-  color: var(--color-text-secondary);
-  font-weight: 600;
-}
-
-.btnMiningExecute {
+.btnRunSim {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 12px 28px;
-  background: linear-gradient(135deg, var(--color-brand-primary) 0%, var(--color-brand-secondary) 100%);
-  color: #030304;
+  gap: 8px;
+  padding: 11px 26px;
+  background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+  color: #06080D;
   border: none;
-  border-radius: var(--radius-full);
-  font-family: var(--font-heading);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 20px rgba(247, 147, 26, 0.35);
-  transition: all var(--transition-normal);
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+  transition: all var(--transition-fast);
 }
 
-.btnMiningExecute:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 28px rgba(247, 147, 26, 0.55);
+.btnRunSim:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
 }
 
-.btnMiningExecute:disabled {
-  opacity: 0.6;
+.btnRunSim:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
 
-/* ── Mining In-Progress Progress Bar ─────────────────────────────────────── */
+/* ── Progress Bar ────────────────────────────────────────────────────────── */
 
-.miningTelemetryBox {
-  margin-top: 20px;
+.simProgressBox {
+  margin-top: 18px;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(247, 147, 26, 0.2);
-  border-radius: var(--radius-lg);
-}
-
-.telemetryHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-brand-primary);
-  margin-bottom: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
 }
 
 .progressBarTrack {
-  height: 8px;
+  height: 6px;
   background: rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-full);
   overflow: hidden;
-  position: relative;
 }
 
 .progressBarFill {
   height: 100%;
-  background: linear-gradient(90deg, var(--color-brand-primary), var(--color-accent-gold));
+  background: var(--accent-primary);
   border-radius: var(--radius-full);
-  box-shadow: 0 0 12px var(--color-brand-primary);
   transition: width 0.4s ease;
-  position: relative;
 }
 
-.progressBarFill::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  animation: shimmer 1.5s infinite;
-}
-
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
-
-.telemetryConsole {
-  margin-top: 12px;
+.progressHint {
+  margin-top: 10px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -317,12 +330,11 @@
 /* ── Results Container ───────────────────────────────────────────────────── */
 
 .resultsCard {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
   padding: 28px;
-  box-shadow: var(--shadow-surface);
-  position: relative;
+  box-shadow: var(--shadow-sm);
 }
 
 .resultsHeader {
@@ -331,42 +343,40 @@
   justify-content: space-between;
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--color-border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
   flex-wrap: wrap;
   gap: 16px;
 }
 
 .resultsTitle {
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: 1.5rem;
   font-weight: 700;
-  color: var(--color-text-primary);
+  color: var(--foreground);
 }
 
 .resultsMeta {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
   margin-top: 4px;
 }
 
-.alphaBanner {
+.netAlphaHighlightBanner {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 14px;
-  background: rgba(255, 214, 0, 0.08);
-  border: 1px solid rgba(255, 214, 0, 0.35);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: var(--radius-full);
-  color: var(--color-accent-gold);
+  color: var(--success-text);
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  box-shadow: 0 0 16px rgba(255, 214, 0, 0.15);
 }
 
-/* ── Incremental Recovery Hero Cards ─────────────────────────────────────── */
+/* ── Incremental Hero Grid ───────────────────────────────────────────────── */
 
 .heroIncrementalGrid {
   display: grid;
@@ -381,24 +391,21 @@
 
 .heroIncCard {
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 20px;
-  position: relative;
-  overflow: hidden;
 }
 
 .heroIncNet {
-  background: linear-gradient(135deg, rgba(247, 147, 26, 0.06) 0%, rgba(255, 214, 0, 0.03) 100%);
-  border-color: rgba(247, 147, 26, 0.4);
-  box-shadow: 0 0 24px rgba(247, 147, 26, 0.1);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.06) 0%, rgba(14, 19, 31, 0.95) 100%);
+  border-color: var(--border-strong);
 }
 
 .incCardHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .incCardLabel {
@@ -406,21 +413,20 @@
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--color-text-muted);
+  letter-spacing: 0.06em;
+  color: var(--muted-foreground);
 }
 
 .incCardVal {
-  font-family: var(--font-mono);
-  font-size: 28px;
+  font-family: var(--font-heading);
+  font-size: 2rem;
   font-weight: 800;
-  color: var(--color-text-primary);
-  letter-spacing: -0.02em;
+  color: var(--foreground);
 }
 
 .incCardSub {
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--muted);
   margin-top: 4px;
 }
 
@@ -438,25 +444,20 @@
 }
 
 .metricCard {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: 18px;
-  transition: all var(--transition-fast);
-}
-
-.metricCard:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px;
 }
 
 .metricLabel {
   font-family: var(--font-mono);
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-muted);
-  margin-bottom: 12px;
+  color: var(--muted-foreground);
+  margin-bottom: 10px;
 }
 
 .comparisonRow {
@@ -468,25 +469,24 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
 .compTag {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
 }
 
 .compVal {
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--color-text-secondary);
+  color: var(--muted);
 }
 
 .compValAI {
-  color: var(--color-brand-primary);
-  text-shadow: 0 0 12px rgba(247, 147, 26, 0.3);
+  color: var(--accent-primary);
 }
 
 /* ── Guardrails Telemetry Strip ──────────────────────────────────────────── */
@@ -496,29 +496,22 @@
   align-items: center;
   justify-content: space-between;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
-  padding: 12px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
   flex-wrap: wrap;
   gap: 12px;
   font-family: var(--font-mono);
   font-size: 11px;
-  margin-bottom: 28px;
-}
-
-.shieldBadge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #10B981;
+  margin-bottom: 24px;
 }
 
 .guardrailItem {
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
 }
 
 .guardrailVal {
-  color: var(--color-text-primary);
+  color: var(--foreground);
   font-weight: 700;
 }
 
@@ -527,14 +520,14 @@
 .chartsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 24px;
+  gap: 20px;
 }
 
 .chartContainer {
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 18px;
 }
 
 .chartHeader {
@@ -542,63 +535,62 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
   margin-bottom: 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-/* ── Experiment History ─────────────────────────────────────────────────── */
+/* ── Simulation History ──────────────────────────────────────────────────── */
 
 .historySection {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px;
 }
 
 .historyList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .historyRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--color-border-subtle);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .historyRow:hover {
-  background: rgba(247, 147, 26, 0.05);
-  border-color: rgba(247, 147, 26, 0.3);
-  transform: translateX(4px);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
 }
 
 .historyId {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-brand-primary);
+  color: var(--accent-primary);
 }
 
 .historyMeta {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--color-text-muted);
+  color: var(--muted-foreground);
 }
 
 .historyNet {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--color-accent-gold);
+  color: var(--success-text);
 }

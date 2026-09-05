@@ -1,5 +1,5 @@
 /**
- * RecoveryOS — Page Header Component (Bitcoin DeFi Aesthetic)
+ * RecoveryOS — Page Header Component (Premium Fintech Aesthetic)
  */
 
 import React, { type ReactNode } from "react";
@@ -29,4 +29,5 @@ export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, label, 
     </header>
   );
 };
+
 export default PageHeader;

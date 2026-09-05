@@ -1,5 +1,5 @@
 /**
- * RecoveryOS — Recovery Comparison Chart (Bitcoin DeFi Theme)
+ * RecoveryOS — Recovery Comparison Chart (Premium Fintech Theme)
  */
 
 import React from "react";
@@ -29,10 +29,10 @@ function fmtK(v: string | number): string {
 
 export const RecoveryComparisonChart: React.FC<Props> = ({ result }) => {
   const amountData = [
-    { name: "Fixed Baseline", value: parseFloat(result.baseline_recovered) || 0, fill: "#475569" },
-    { name: "RecoveryOS AI", value: parseFloat(result.ai_recovered) || 0, fill: "#F7931A" },
-    { name: "Gross Alpha", value: parseFloat(result.incremental_recovery) || 0, fill: "#FFD600" },
-    { name: "Net Alpha", value: parseFloat(result.net_incremental_recovery) || 0, fill: "#34D399" },
+    { name: "Baseline Retry", value: parseFloat(result.baseline_recovered) || 0, fill: "#475569" },
+    { name: "RecoveryOS AI", value: parseFloat(result.ai_recovered) || 0, fill: "#F59E0B" },
+    { name: "Incremental Recovery", value: parseFloat(result.incremental_recovery) || 0, fill: "#D97706" },
+    { name: "Net Incremental", value: parseFloat(result.net_incremental_recovery) || 0, fill: "#10B981" },
   ];
 
   return (
@@ -41,12 +41,12 @@ export const RecoveryComparisonChart: React.FC<Props> = ({ result }) => {
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
         <XAxis
           dataKey="name"
-          tick={{ fill: "#FFFFFF", fontSize: 12, fontFamily: "Space Grotesk" }}
+          tick={{ fill: "#F8FAFC", fontSize: 11, fontFamily: "var(--font-body)" }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fill: "#94A3B8", fontSize: 11, fontFamily: "JetBrains Mono" }}
+          tick={{ fill: "#94A3B8", fontSize: 11, fontFamily: "var(--font-mono)" }}
           tickFormatter={fmtK}
           axisLine={false}
           tickLine={false}
@@ -54,22 +54,23 @@ export const RecoveryComparisonChart: React.FC<Props> = ({ result }) => {
         <Tooltip
           formatter={(value: any) => [fmtK(value), "Amount"]}
           contentStyle={{
-            background: "#0F1115",
-            border: "1px solid rgba(247, 147, 26, 0.4)",
-            borderRadius: "12px",
+            background: "#0E131F",
+            border: "1px solid rgba(245, 158, 11, 0.3)",
+            borderRadius: "8px",
             fontSize: "12px",
-            fontFamily: "JetBrains Mono",
-            boxShadow: "0 0 20px rgba(247, 147, 26, 0.25)",
+            color: "#F8FAFC",
+            fontFamily: "var(--font-mono)",
+            boxShadow: "0 4px 14px rgba(0, 0, 0, 0.5)",
           }}
-          labelStyle={{ color: "#FFFFFF", fontFamily: "Space Grotesk", fontWeight: "bold" }}
         />
         <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-          {amountData.map((entry) => (
-            <Cell key={entry.name} fill={entry.fill} />
+          {amountData.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.fill} />
           ))}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
   );
 };
+
 export default RecoveryComparisonChart;

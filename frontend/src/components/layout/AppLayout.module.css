@@ -1,36 +1,11 @@
-/* RecoveryOS — App Layout with Ambient Lighting */
+/* RecoveryOS — Clean Fintech App Layout */
 
 .layout {
   display: flex;
   min-height: 100vh;
-  background-color: #030304;
+  background-color: var(--background);
   position: relative;
   overflow-x: hidden;
-}
-
-/* Ambient Radial Energy Fields */
-.ambientGlowTop {
-  position: fixed;
-  top: -100px;
-  right: -50px;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(247, 147, 26, 0.08) 0%, rgba(234, 88, 12, 0.03) 50%, transparent 70%);
-  filter: blur(120px);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.ambientGlowBottom {
-  position: fixed;
-  bottom: -150px;
-  left: 200px;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(255, 214, 0, 0.04) 0%, rgba(247, 147, 26, 0.02) 60%, transparent 80%);
-  filter: blur(140px);
-  pointer-events: none;
-  z-index: 0;
 }
 
 .contentContainer {
@@ -46,34 +21,84 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.85rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(3, 3, 4, 0.7);
+  padding: 0.75rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(6, 8, 13, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
   z-index: 30;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
-.headerNetworkBadge {
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.engineStatus {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .pulseDot {
   width: 6px;
   height: 6px;
   border-radius: 9999px;
-  background-color: #F7931A;
-  box-shadow: 0 0 10px #F7931A;
-  animation: pulseDot 2s infinite ease-in-out;
+  background-color: var(--success-text);
+  box-shadow: 0 0 8px var(--success-text);
+  animation: pulseDot 2.5s infinite ease-in-out;
 }
 
 @keyframes pulseDot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(0.85); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+.environmentBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: rgba(245, 158, 11, 0.08);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--accent-primary);
+  letter-spacing: 0.04em;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  color: var(--muted-foreground);
+}
+
+.systemMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.systemMetaVal {
+  color: var(--foreground);
+  font-weight: 600;
 }
 
 .main {

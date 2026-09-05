@@ -1,60 +1,53 @@
 /**
- * RecoveryOS — App Layout Shell with Bitcoin DeFi Atmosphere & Gamification
+ * RecoveryOS — Premium Fintech App Layout Shell
+ * Pure operational layout for enterprise revenue recovery.
  */
 
-import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-import { HunterHUD } from "../gamification/HunterHUD";
-import { TrophyModal } from "../gamification/TrophyModal";
-import { XPToast } from "../gamification/XPToast";
-import { gamification } from "../../services/gamification";
-import type { HunterState } from "../../services/gamification";
 import styles from "./AppLayout.module.css";
 
 export function AppLayout() {
-  const [isTrophyOpen, setIsTrophyOpen] = useState(false);
-  const [hunterState, setHunterState] = useState<HunterState>(gamification.getState());
-
-  useEffect(() => {
-    return gamification.subscribe(setHunterState);
-  }, []);
-
   return (
     <div className={styles.layout}>
-      {/* Ambient background energy blobs */}
-      <div className={styles.ambientGlowTop} aria-hidden="true" />
-      <div className={styles.ambientGlowBottom} aria-hidden="true" />
-
-      {/* Persistent Sidebar */}
+      {/* Persistent Operational Sidebar */}
       <Sidebar />
 
       {/* Main Content Area */}
       <div className={styles.contentContainer}>
-        {/* Top Floating Utility & Gamification Bar */}
+        {/* Top Operational Status Bar */}
         <header className={styles.topHeader}>
-          <div className={styles.headerNetworkBadge}>
-            <span className={styles.pulseDot} />
-            <span className="font-mono text-xs text-[#94A3B8]">
-              NETWORK: <strong className="text-white">BITCOIN MAINNET / TESTNET</strong>
-            </span>
+          <div className={styles.headerLeft}>
+            <div className={styles.engineStatus}>
+              <span className={styles.pulseDot} />
+              <span>RECOVERY ENGINE</span>
+              <span style={{ color: "var(--success-text)", fontWeight: 700 }}>OPERATIONAL</span>
+            </div>
+
+            <div className={styles.environmentBadge}>
+              <span>PAYMENT ENVIRONMENT:</span>
+              <span style={{ color: "#FFFFFF" }}>RAZORPAY TEST MODE</span>
+            </div>
           </div>
 
-          <HunterHUD onOpenTrophies={() => setIsTrophyOpen(true)} />
+          <div className={styles.headerRight}>
+            <div className={styles.systemMetaItem}>
+              <span>API STATUS:</span>
+              <span className={styles.systemMetaVal} style={{ color: "var(--success-text)" }}>
+                CONNECTED
+              </span>
+            </div>
+            <div className={styles.systemMetaItem}>
+              <span>MERCHANT CONTEXT:</span>
+              <span className={styles.systemMetaVal}>RAZORPAY_DEMO</span>
+            </div>
+          </div>
         </header>
 
         <main className={styles.main} id="main-content">
           <Outlet />
         </main>
       </div>
-
-      {/* Gamification Floating Elements */}
-      <XPToast />
-      <TrophyModal
-        isOpen={isTrophyOpen}
-        onClose={() => setIsTrophyOpen(false)}
-        state={hunterState}
-      />
     </div>
   );
 }
