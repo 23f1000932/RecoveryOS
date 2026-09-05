@@ -1,11 +1,8 @@
 /**
- * RecoveryOS — Action Expected-Value Bar Chart
- *
- * Horizontal bar chart showing Expected Net Revenue per action candidate.
- * Highlights the selected/recommended action.
- * Uses Recharts BarChart.
+ * RecoveryOS — Action Expected-Value Bar Chart (Bitcoin DeFi Theme)
  */
 
+import React from "react";
 import {
   Bar,
   BarChart,
@@ -16,25 +13,27 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
-import type { ActionCandidate } from '../../types';
-import { formatAction } from '../../services/api';
+} from "recharts";
+import type { ActionCandidate } from "../../types";
+import { formatAction } from "../../services/api";
 
 interface Props {
   candidates: ActionCandidate[];
   recommendedAction: string | null;
 }
 
-const COLOR_SELECTED = 'hsl(35, 85%, 60%)';
-const COLOR_ALLOWED  = 'hsl(210, 60%, 55%)';
-const COLOR_BLOCKED  = 'hsl(0, 0%, 38%)';
+const COLOR_SELECTED = "#F7931A"; // Bitcoin Orange
+const COLOR_ALLOWED = "#38BDF8";  // Cyan / Node
+const COLOR_BLOCKED = "#334155";  // Dim boundary
 
 function fmt(v: string | null | undefined): string {
-  if (!v) return '₹0';
+  if (!v) return "₹0";
   const n = parseFloat(v);
-  if (isNaN(n)) return '₹0';
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+  if (isNaN(n)) return "₹0";
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
   }).format(n);
 }
 
@@ -43,65 +42,65 @@ function CustomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const d = payload[0].payload as ActionCandidate;
   return (
-    <div style={{
-      background: 'hsl(0,0%,10%)', border: '1px solid hsl(0,0%,20%)',
-      borderRadius: 8, padding: '10px 14px', fontSize: 13,
-    }}>
-      <p style={{ color: 'hsl(35,85%,60%)', fontWeight: 700, marginBottom: 4 }}>
+    <div className="bg-[#0F1115] border border-[#F7931A]/40 rounded-xl p-3.5 shadow-[0_0_20px_rgba(247,147,26,0.25)] text-xs font-mono">
+      <p className="text-[#FFD600] font-heading font-bold text-sm mb-1">
         {formatAction(d.action)}
       </p>
-      <p style={{ color: '#ccc' }}>P(success): <b>{(d.probability * 100).toFixed(1)}%</b></p>
-      <p style={{ color: '#ccc' }}>Exp. Net Revenue: <b>{fmt(d.expected_net_revenue)}</b></p>
-      <p style={{ color: d.allowed ? '#6fc' : '#f88' }}>
-        {d.allowed ? '✓ Allowed' : `✗ Blocked: ${d.blocked_reason ?? ''}`}
-      </p>
+      <div className="space-y-1 text-[#94A3B8]">
+        <p>P(Success): <strong className="text-white">{(d.probability * 100).toFixed(1)}%</strong></p>
+        <p>Expected Net Alpha: <strong className="text-[#F7931A]">{fmt(d.expected_net_revenue)}</strong></p>
+        <p className={`font-semibold ${d.allowed ? "text-[#34D399]" : "text-[#F87171]"}`}>
+          {d.allowed ? "✓ Guardrail Passed" : `✗ Blocked: ${d.blocked_reason ?? "Policy Limit"}`}
+        </p>
+      </div>
     </div>
   );
 }
 
-export function ActionBarChart({ candidates, recommendedAction }: Props) {
+export const ActionBarChart: React.FC<Props> = ({ candidates, recommendedAction }) => {
   if (!candidates.length) return null;
 
-  const sorted = [...candidates].sort((a, b) =>
-    parseFloat(b.expected_net_revenue || '0') - parseFloat(a.expected_net_revenue || '0')
+  const sorted = [...candidates].sort(
+    (a, b) =>
+      parseFloat(b.expected_net_revenue || "0") - parseFloat(a.expected_net_revenue || "0")
   );
 
-  const data = sorted.map(c => ({
+  const data = sorted.map((c) => ({
     ...c,
     label: formatAction(c.action),
-    enr: Math.max(parseFloat(c.expected_net_revenue || '0'), 0),
+    enr: Math.max(parseFloat(c.expected_net_revenue || "0"), 0),
   }));
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
+    <ResponsiveContainer width="100%" height={260}>
       <BarChart
         data={data}
         layout="vertical"
-        margin={{ top: 4, right: 60, bottom: 4, left: 90 }}
+        margin={{ top: 8, right: 70, bottom: 8, left: 100 }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,18%)" horizontal={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" horizontal={false} />
         <XAxis
           type="number"
-          tick={{ fill: '#888', fontSize: 11 }}
+          tick={{ fill: "#94A3B8", fontSize: 11, fontFamily: "JetBrains Mono" }}
           tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`}
-          axisLine={{ stroke: 'hsl(0,0%,20%)' }}
+          axisLine={{ stroke: "rgba(255,255,255,0.1)" }}
           tickLine={false}
         />
         <YAxis
           type="category"
           dataKey="label"
-          tick={{ fill: '#ccc', fontSize: 12 }}
+          tick={{ fill: "#FFFFFF", fontSize: 12, fontFamily: "Space Grotesk" }}
           axisLine={false}
           tickLine={false}
-          width={86}
+          width={95}
         />
-        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(0,0%,12%)' }} />
-        <Bar dataKey="enr" radius={[0, 4, 4, 0]}>
+        <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(247, 147, 26, 0.05)" }} />
+        <Bar dataKey="enr" radius={[0, 6, 6, 0]}>
           <LabelList
             dataKey="enr"
             position="right"
             formatter={(v: any) => fmt(String(v))}
-            style={{ fill: '#aaa', fontSize: 11 }}
+            style={{ fill: "#FFD600", fontSize: 11, fontFamily: "JetBrains Mono", fontWeight: 500 }}
           />
           {data.map((entry) => (
             <Cell
@@ -120,4 +119,5 @@ export function ActionBarChart({ candidates, recommendedAction }: Props) {
       </BarChart>
     </ResponsiveContainer>
   );
-}
+};
+export default ActionBarChart;

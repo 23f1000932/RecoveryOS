@@ -1,10 +1,8 @@
 /**
- * RecoveryOS — Incremental Revenue Chart (design.md §20)
- *
- * Visualizes cumulative net incremental revenue across simulated cases.
- * Uses gold accent token hsl(35, 85%, 60%) to highlight the AI advantage over baseline.
+ * RecoveryOS — Incremental Revenue Chart (Bitcoin DeFi Theme)
  */
 
+import React from "react";
 import {
   Area,
   AreaChart,
@@ -13,24 +11,23 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts';
-import type { SimulatorResult } from '../../types';
+} from "recharts";
+import type { SimulatorResult } from "../../types";
 
 interface Props {
   result: SimulatorResult;
 }
 
 function fmtCurrency(v: number): string {
-  if (isNaN(v)) return '₹0';
+  if (isNaN(v)) return "₹0";
   if (Math.abs(v) >= 100000) return `₹${(v / 100000).toFixed(1)}L`;
   if (Math.abs(v) >= 1000) return `₹${(v / 1000).toFixed(1)}K`;
   return `₹${v.toFixed(0)}`;
 }
 
-export function IncrementalRevenueChart({ result }: Props) {
+export const IncrementalRevenueChart: React.FC<Props> = ({ result }) => {
   const cases = result.cases || [];
 
-  // Downsample or calculate cumulative curve (up to 50 points for smooth rendering)
   const step = Math.max(1, Math.floor(cases.length / 40));
   let runningIncremental = 0;
   let runningAi = 0;
@@ -65,36 +62,33 @@ export function IncrementalRevenueChart({ result }: Props) {
 
   if (data.length === 0) {
     return (
-      <div style={{ height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>
+      <div className="h-60 flex items-center justify-center text-[#64748B] font-mono text-xs">
         No case trajectory data available
       </div>
     );
   }
 
   return (
-    <div style={{ width: '100%', height: 260 }}>
+    <div className="w-full h-64">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data} margin={{ top: 12, right: 20, bottom: 8, left: 16 }}>
           <defs>
-            <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(35, 85%, 60%)" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="hsl(35, 85%, 60%)" stopOpacity={0.0} />
-            </linearGradient>
-            <linearGradient id="baseGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="hsl(210, 50%, 45%)" stopOpacity={0.2} />
-              <stop offset="95%" stopColor="hsl(210, 50%, 45%)" stopOpacity={0.0} />
+            <linearGradient id="btcGlowGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#F7931A" stopOpacity={0.45} />
+              <stop offset="50%" stopColor="#EA580C" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#030304" stopOpacity={0.0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(0, 0%, 18%)" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.06)" vertical={false} />
           <XAxis
             dataKey="caseIndex"
-            tick={{ fill: '#888', fontSize: 11 }}
+            tick={{ fill: "#94A3B8", fontSize: 11, fontFamily: "JetBrains Mono" }}
             axisLine={false}
             tickLine={false}
-            label={{ value: 'Cases Processed', position: 'insideBottom', offset: -4, fill: '#666', fontSize: 11 }}
+            label={{ value: "Cases Processed in Block", position: "insideBottom", offset: -4, fill: "#64748B", fontSize: 10, fontFamily: "Space Grotesk" }}
           />
           <YAxis
-            tick={{ fill: '#888', fontSize: 11 }}
+            tick={{ fill: "#94A3B8", fontSize: 11, fontFamily: "JetBrains Mono" }}
             tickFormatter={fmtCurrency}
             axisLine={false}
             tickLine={false}
@@ -102,32 +96,35 @@ export function IncrementalRevenueChart({ result }: Props) {
           <Tooltip
             formatter={(value: any, name: any) => [
               fmtCurrency(Number(value) || 0),
-              name === 'cumulativeNetIncremental'
-                ? 'Net Incremental (AI - Baseline - Cost)'
-                : name === 'cumulativeAi'
-                ? 'AI Total Recovered'
-                : 'Baseline Recovered',
+              name === "cumulativeNetIncremental"
+                ? "Net Alpha (AI - Baseline - Cost)"
+                : name === "cumulativeAi"
+                ? "AI Total Recovered"
+                : "Baseline Recovered",
             ]}
-            labelFormatter={(label) => `Case #${label}`}
+            labelFormatter={(label) => `Block Node #${label}`}
             contentStyle={{
-              background: 'hsl(0, 0%, 10%)',
-              border: '1px solid hsl(0, 0%, 25%)',
-              borderRadius: '6px',
-              fontSize: '12px',
-              color: '#fff',
+              background: "#0F1115",
+              border: "1px solid rgba(247, 147, 26, 0.4)",
+              borderRadius: "12px",
+              fontSize: "12px",
+              color: "#FFFFFF",
+              fontFamily: "JetBrains Mono",
+              boxShadow: "0 0 20px rgba(247, 147, 26, 0.25)",
             }}
           />
           <Area
             type="monotone"
             dataKey="cumulativeNetIncremental"
-            stroke="hsl(35, 85%, 60%)"
-            strokeWidth={2.5}
+            stroke="#FFD600"
+            strokeWidth={3}
             fillOpacity={1}
-            fill="url(#goldGradient)"
+            fill="url(#btcGlowGradient)"
             name="cumulativeNetIncremental"
           />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
-}
+};
+export default IncrementalRevenueChart;

@@ -1,77 +1,334 @@
-/* CommandCenter — Page Styles */
+/* CommandCenter — Bitcoin DeFi Theme Styles */
 
 .page {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .content {
-  padding: 2rem 2.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 2.25rem;
 }
 
-.section {
+/* ── Hero 3D Orbital Banner ───────────────────────────────────────────────── */
+.heroBanner {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 2.5rem;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(15, 17, 21, 0.95) 0%, rgba(23, 26, 33, 0.95) 100%);
+  border: 1px solid rgba(247, 147, 26, 0.25);
+  box-shadow: 0 0 50px -10px rgba(247, 147, 26, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.heroBanner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 350px;
+  height: 100%;
+  background: radial-gradient(circle at 80% 50%, rgba(247, 147, 26, 0.12), transparent 70%);
+  pointer-events: none;
+}
+
+.heroText {
+  max-width: 650px;
+  z-index: 1;
+}
+
+.badgePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  background: rgba(247, 147, 26, 0.1);
+  border: 1px solid rgba(247, 147, 26, 0.3);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #F7931A;
+  margin-bottom: 1rem;
+}
+
+.badgeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #F7931A;
+  box-shadow: 0 0 8px #F7931A;
+  animation: pingDot 1.5s infinite;
+}
+
+@keyframes pingDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+.heroTitle {
+  font-family: var(--font-heading);
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.85rem;
+}
+
+.heroSubtitle {
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  color: #94A3B8;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.heroCtaRow {
+  display: flex;
+  align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* 3D-Style Orbital Graphic */
+.orbContainer {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ringOuter {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  border: 2px dashed rgba(247, 147, 26, 0.4);
+  animation: spinSlow 18s linear infinite;
+}
+
+.ringInner {
+  position: absolute;
+  width: 75%;
+  height: 75%;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 214, 0, 0.4);
+  animation: spinSlowReverse 12s linear infinite;
+}
+
+.coreOrb {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #EA580C 0%, #F7931A 50%, #FFD600 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 35px rgba(247, 147, 26, 0.7);
+  animation: float 6s ease-in-out infinite;
+}
+
+/* ── Section Headers ─────────────────────────────────────────────────────── */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.sectionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(247, 147, 26, 0.15);
+  border: 1px solid rgba(247, 147, 26, 0.3);
+  color: #F7931A;
 }
 
 .sectionLabel {
-  /* label-mono is applied globally */
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #FFFFFF;
 }
 
 /* ── Metrics Grid ─────────────────────────────────────────────────────────── */
 .metricsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.25rem;
 }
 
 .metricCard {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 135px;
 }
 
-.metricCard:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .metricLabel {
-  /* uses .label-mono globally */
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94A3B8;
+}
+
+.pulseNode {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.featuredCard {
+  border-color: rgba(247, 147, 26, 0.4);
+  background: linear-gradient(135deg, #0F1115 0%, #1A1713 100%);
+}
+
+.accentGold .pulseNode {
+  background: #FFD600;
+  box-shadow: 0 0 8px #FFD600;
+}
+.accentGold .metricValue {
+  color: #FFD600;
+  text-shadow: 0 0 15px rgba(255, 214, 0, 0.3);
+}
+
+.accentOrange .pulseNode {
+  background: #F7931A;
+  box-shadow: 0 0 8px #F7931A;
+}
+.accentOrange .metricValue {
+  color: #FFFFFF;
+}
+
+.accentGreen .pulseNode {
+  background: #10B981;
+  box-shadow: 0 0 8px #10B981;
+}
+.accentGreen .metricValue {
+  color: #34D399;
+}
+
+.accentCyan .pulseNode {
+  background: #38BDF8;
+  box-shadow: 0 0 8px #38BDF8;
 }
 
 .metricValue {
-  font-size: 1.75rem;
-  letter-spacing: -0.03em;
+  font-family: var(--font-mono);
+  font-size: 1.625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .metricSub {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--muted-foreground);
+  font-size: 0.6875rem;
+  color: #64748B;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
 }
 
-.metricSubLabel {
-  color: var(--muted-foreground);
-  opacity: 0.7;
+.metricSubValue {
+  color: #F7931A;
+  font-weight: 500;
 }
 
-/* Loading skeleton */
+/* ── Guardrail Stats ──────────────────────────────────────────────────────── */
+.guardrailGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.25rem;
+}
+
+.guardrailStat {
+  background-color: #0F1115;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 1.35rem;
+  text-align: center;
+  transition: all 250ms ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.guardrailStat:hover {
+  transform: translateY(-2px);
+  border-color: rgba(247, 147, 26, 0.3);
+  box-shadow: 0 0 20px -5px rgba(247, 147, 26, 0.15);
+}
+
+.statIconBadge {
+  margin-bottom: 0.5rem;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.guardrailValue {
+  font-family: var(--font-mono);
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FFFFFF;
+  line-height: 1.1;
+}
+
+.guardrailLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94A3B8;
+  margin-top: 0.35rem;
+}
+
+/* ── Charts Grid ─────────────────────────────────────────────────────────── */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Skeleton */
 .skeleton {
   height: 2.5rem;
-  background: linear-gradient(
-    90deg,
-    var(--muted) 25%,
-    var(--border) 50%,
-    var(--muted) 75%
-  );
+  background: linear-gradient(90deg, #171A21 25%, #1E293B 50%, #171A21 75%);
   background-size: 200% 100%;
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   animation: shimmer 1.5s infinite;
 }
 
@@ -80,65 +337,16 @@
   100% { background-position: -200% 0; }
 }
 
-/* ── Guardrail Stats ──────────────────────────────────────────────────────── */
-.guardrailGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
-}
-
-.guardrailStat {
-  background-color: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  text-align: center;
-}
-
-.guardrailValue {
-  font-size: 2rem;
-  letter-spacing: -0.03em;
-  color: var(--foreground);
-}
-
-.guardrailLabel {
-  font-family: var(--font-mono);
-  font-size: 0.6875rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-  margin-top: 0.25rem;
-}
-
-/* ── Chart Placeholder ───────────────────────────────────────────────────── */
-.chartPlaceholder {
-  background-color: var(--muted);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-lg);
-  padding: 3rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 200px;
-}
-
-.chartPlaceholderText {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  color: var(--muted-foreground);
-  text-align: center;
-  max-width: 400px;
-  line-height: 1.6;
-}
-
-/* ── Error Card ──────────────────────────────────────────────────────────── */
-.errorCard {
-  padding: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border-color: var(--danger-border);
-  background-color: var(--danger-bg);
-  color: var(--danger-text);
+@media (max-width: 900px) {
+  .heroBanner {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1.5rem;
+  }
+  .heroCtaRow {
+    justify-content: center;
+  }
+  .orbContainer {
+    margin-top: 1rem;
+  }
 }

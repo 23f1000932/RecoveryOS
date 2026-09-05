@@ -1,13 +1,96 @@
-/* RecoveryOS — App Layout */
+/* RecoveryOS — App Layout with Ambient Lighting */
 
 .layout {
   display: flex;
   min-height: 100vh;
-  background-color: var(--background);
+  background-color: #030304;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Ambient Radial Energy Fields */
+.ambientGlowTop {
+  position: fixed;
+  top: -100px;
+  right: -50px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(247, 147, 26, 0.08) 0%, rgba(234, 88, 12, 0.03) 50%, transparent 70%);
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambientGlowBottom {
+  position: fixed;
+  bottom: -150px;
+  left: 200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 214, 0, 0.04) 0%, rgba(247, 147, 26, 0.02) 60%, transparent 80%);
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.contentContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.topHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(3, 3, 4, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.headerNetworkBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pulseDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background-color: #F7931A;
+  box-shadow: 0 0 10px #F7931A;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(0.85); }
 }
 
 .main {
   flex: 1;
   min-width: 0;
+  padding: 2rem;
   overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  .main {
+    padding: 1.25rem;
+  }
+  .topHeader {
+    padding: 0.75rem 1.25rem;
+  }
 }

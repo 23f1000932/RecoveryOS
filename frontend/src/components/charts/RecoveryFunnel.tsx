@@ -1,14 +1,14 @@
 /**
- * RecoveryOS — Recovery Funnel Component (design.md §20)
- *
- * Funnel stages: Failed -> Eligible -> Actioned -> Recovered.
- * Renders conversion rate drop-offs and counts between pipeline stages.
+ * RecoveryOS — Recovery Funnel Component (Bitcoin DeFi Theme)
  */
+
+import React from "react";
 
 interface FunnelStep {
   label: string;
   count: number;
   color: string;
+  glow: string;
   description: string;
 }
 
@@ -19,86 +19,84 @@ interface Props {
   recovered?: number;
 }
 
-export function RecoveryFunnel({
+export const RecoveryFunnel: React.FC<Props> = ({
   totalFailed = 100,
   eligible = 88,
   actioned = 80,
   recovered = 65,
-}: Props) {
+}) => {
   const steps: FunnelStep[] = [
     {
-      label: 'Failed Payments',
+      label: "1. Failed Ingestion",
       count: totalFailed,
-      color: 'hsl(0, 65%, 50%)',
-      description: 'Ingested via webhook or simulator',
+      color: "#F87171",
+      glow: "0 0 10px rgba(248, 113, 113, 0.4)",
+      description: "Failed payments intercepted by webhook / simulator",
     },
     {
-      label: 'Policy Eligible',
+      label: "2. Policy & Guardrail Verified",
       count: eligible,
-      color: 'hsl(210, 60%, 55%)',
-      description: 'Passed guardrails & positive ENR',
+      color: "#38BDF8",
+      glow: "0 0 10px rgba(56, 189, 248, 0.4)",
+      description: "Passed 12 deterministic safety guardrails & positive ENR",
     },
     {
-      label: 'Intervention Actioned',
+      label: "3. Action Candidate Dispatched",
       count: actioned,
-      color: 'hsl(35, 85%, 60%)',
-      description: 'Optimal intervention dispatched',
+      color: "#F7931A",
+      glow: "0 0 12px rgba(247, 147, 26, 0.5)",
+      description: "Optimal action dispatched via controlled adapter",
     },
     {
-      label: 'Successfully Recovered',
+      label: "4. Settlement Recovered",
       count: recovered,
-      color: 'hsl(140, 60%, 45%)',
-      description: 'Payment settled & verified',
+      color: "#FFD600",
+      glow: "0 0 15px rgba(255, 214, 0, 0.6)",
+      description: "Payment verified & ledger updated",
     },
   ];
 
   const maxVal = Math.max(...steps.map((s) => s.count), 1);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%', padding: '8px 0' }}>
+    <div className="flex flex-col gap-4 w-full py-2">
       {steps.map((step, idx) => {
         const pctOfTotal = ((step.count / maxVal) * 100).toFixed(0);
         const prevCount = idx > 0 ? steps[idx - 1].count : null;
         const convRate = prevCount && prevCount > 0 ? ((step.count / prevCount) * 100).toFixed(1) : null;
 
         return (
-          <div key={step.label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px' }}>
-              <span style={{ fontWeight: 500, color: '#ddd' }}>{step.label}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div key={step.label} className="flex flex-col gap-1.5">
+            <div className="flex justify-between items-center text-xs font-mono">
+              <span className="font-heading font-medium text-white text-sm">{step.label}</span>
+              <div className="flex items-center gap-3">
                 {convRate && (
-                  <span style={{ fontSize: '11px', color: '#888' }}>
-                    {convRate}% from prev
+                  <span className="text-[11px] text-[#94A3B8] bg-white/5 px-2 py-0.5 rounded">
+                    {convRate}% conversion
                   </span>
                 )}
-                <span style={{ fontWeight: 600, color: step.color }}>
+                <span className="font-bold text-sm" style={{ color: step.color }}>
                   {step.count.toLocaleString()} ({pctOfTotal}%)
                 </span>
               </div>
             </div>
-            <div
-              style={{
-                width: '100%',
-                height: '14px',
-                background: 'hsl(0, 0%, 14%)',
-                borderRadius: '4px',
-                overflow: 'hidden',
-              }}
-            >
+
+            <div className="w-full h-3 rounded-full bg-[#1E293B] overflow-hidden p-0.5 border border-white/5">
               <div
+                className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${pctOfTotal}%`,
-                  height: '100%',
-                  background: step.color,
-                  borderRadius: '4px',
-                  transition: 'width 0.4s ease',
+                  backgroundColor: step.color,
+                  boxShadow: step.glow,
                 }}
               />
             </div>
-            <span style={{ fontSize: '11px', color: '#666' }}>{step.description}</span>
+
+            <span className="text-[11px] font-mono text-[#64748B]">{step.description}</span>
           </div>
         );
       })}
     </div>
   );
-}
+};
+export default RecoveryFunnel;

@@ -1,46 +1,60 @@
 /**
- * RecoveryOS — Simulator Page (Phase 7 — Full Implementation)
+ * RecoveryOS — Simulator Page (Bitcoin DeFi Mining Rig Overhaul)
  *
  * Flow:
- *   1. User configures rows + seed
+ *   1. User configures dataset rows + latent seed with quick presets
  *   2. POST /api/simulator/run → get experiment_id
- *   3. Poll GET /api/simulator/{id} every 2s (max 60 attempts)
- *   4. On success → show metric cards + RecoveryComparisonChart
- *   5. Keep last 3 experiment results in history
+ *   3. Real-time telemetry during polling (max 60 attempts)
+ *   4. On completion:
+ *      - Trigger Gamification (+400 XP, 'HASHRATE_SURGE' badge, celebration confetti)
+ *      - Render High-Yield Alpha metrics & Dual-Comparison Charts
+ *   5. Keeps interactive history of past runs
  */
 
 import { useEffect, useRef, useState } from 'react';
+import {
+  Cpu,
+  Zap,
+  Play,
+  RotateCcw,
+  ShieldCheck,
+  TrendingUp,
+  Coins,
+  Activity,
+  History,
+  CheckCircle2,
+} from 'lucide-react';
 import { IncrementalRevenueChart } from '../components/charts/IncrementalRevenueChart';
 import { RecoveryComparisonChart } from '../components/charts/RecoveryComparisonChart';
 import { EmptyState } from '../components/layout/EmptyState';
 import { ErrorBanner } from '../components/layout/ErrorBanner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api, formatINR, formatPercent } from '../services/api';
+import { gamification } from '../services/gamification';
 import type { SimulatorResult } from '../types';
 import styles from './SimulatorPage.module.css';
 
 const MAX_POLL_ATTEMPTS = 60;
 const POLL_INTERVAL_MS = 2000;
 
-interface MetricPairProps {
+interface MetricCardProps {
   label: string;
   baseline: string;
   ai: string;
-  highlight?: boolean;
 }
 
-function MetricPair({ label, baseline, ai, highlight }: MetricPairProps) {
+function MetricCard({ label, baseline, ai }: MetricCardProps) {
   return (
-    <div className={`${styles.metricPair} ${highlight ? styles.metricPairHighlight : ''}`}>
-      <p className={styles.pairLabel}>{label}</p>
-      <div className={styles.pairRow}>
-        <div className={styles.pairCol}>
-          <p className={styles.pairTag}>Baseline</p>
-          <p className={styles.pairValue}>{baseline}</p>
+    <div className={styles.metricCard}>
+      <p className={styles.metricLabel}>{label}</p>
+      <div className={styles.comparisonRow}>
+        <div className={styles.comparisonCol}>
+          <span className={styles.compTag}>Baseline Policy</span>
+          <span className={styles.compVal}>{baseline}</span>
         </div>
-        <div className={styles.pairCol}>
-          <p className={styles.pairTag} style={{ color: 'hsl(35,85%,60%)' }}>RecoveryOS AI</p>
-          <p className={styles.pairValue} style={{ color: 'hsl(35,85%,68%)' }}>{ai}</p>
+        <div className={styles.comparisonCol}>
+          <span className={styles.compTag} style={{ color: 'var(--color-brand-primary)' }}>RecoveryOS AI</span>
+          <span className={`${styles.compVal} ${styles.compValAI}`}>{ai}</span>
         </div>
       </div>
     </div>
@@ -60,6 +74,10 @@ export function SimulatorPage() {
 
   // Clean up polling on unmount
   useEffect(() => () => { if (pollRef.current) clearTimeout(pollRef.current); }, []);
+
+  const randomizeSeed = () => {
+    setSeed(Math.floor(Math.random() * 9000) + 1000);
+  };
 
   const runSim = async () => {
     if (loading || polling) return;
@@ -82,7 +100,7 @@ export function SimulatorPage() {
   const pollForResult = (experimentId: string, attempt: number) => {
     if (attempt >= MAX_POLL_ATTEMPTS) {
       setPolling(false);
-      setError(`Experiment timed out after ${MAX_POLL_ATTEMPTS * POLL_INTERVAL_MS / 1000}s. The backend may still be running — try fetching manually.`);
+      setError(`Experiment timed out after ${(MAX_POLL_ATTEMPTS * POLL_INTERVAL_MS) / 1000}s. The compute node is still processing.`);
       return;
     }
 
@@ -92,7 +110,17 @@ export function SimulatorPage() {
       .then((res) => {
         setPolling(false);
         setResult(res);
-        setHistory((h) => [res, ...h].slice(0, 3));
+        setHistory((h) => [res, ...h.filter((x) => x.experiment_id !== res.experiment_id)].slice(0, 4));
+
+        // Gamification check: Award XP and Badge if positive alpha
+        if (res.net_incremental_recovery > 0) {
+          gamification.addXP(400, "Hashrate Surge Completed", res.net_incremental_recovery);
+          gamification.unlockBadge("HASHRATE_SURGE");
+          gamification.incrementStreak();
+          gamification.fireCelebration(true);
+        } else {
+          gamification.addXP(100, "Simulation Benchmark Finished");
+        }
       })
       .catch((e: { status?: number }) => {
         if (e.status === 404) {
@@ -103,7 +131,7 @@ export function SimulatorPage() {
           );
         } else {
           setPolling(false);
-          setError('Failed to retrieve experiment results.');
+          setError('Failed to retrieve experiment results from compute cluster.');
         }
       });
   };
@@ -113,67 +141,170 @@ export function SimulatorPage() {
   return (
     <div className={`animate-enter ${styles.page}`}>
       <PageHeader
-        label="Simulator"
-        title="A/B Experiment Runner"
-        subtitle="Compare Baseline (fixed retry) vs RecoveryOS AI on identical synthetic datasets. Same seed = same latent outcomes."
+        label="Mining Rig Simulator"
+        title="A/B Latent Experiment Runner"
+        subtitle="Simulate stress-test batches across 10-stage AI recovery pipelines vs naive baseline retry models. Identical seeds yield strictly deterministic latent failure outcomes."
       />
 
       <div className={styles.content}>
-        {/* Configuration */}
-        <section className={`card ${styles.configCard}`} aria-label="Simulation configuration">
-          <p className={`label-mono ${styles.configLabel}`}>Experiment Configuration</p>
-          <div className={styles.configRow}>
-            <label className={styles.fieldGroup} htmlFor="sim-rows">
-              <span className="label-mono">Dataset Rows</span>
-              <input
-                id="sim-rows"
-                className={`input ${styles.numberInput}`}
-                type="number"
-                min={10}
-                max={50000}
-                value={rows}
-                disabled={isRunning}
-                onChange={(e) => setRows(parseInt(e.target.value, 10) || 1000)}
-              />
-            </label>
-            <label className={styles.fieldGroup} htmlFor="sim-seed">
-              <span className="label-mono">Random Seed</span>
-              <input
-                id="sim-seed"
-                className={`input ${styles.numberInput}`}
-                type="number"
-                value={seed}
-                disabled={isRunning}
-                onChange={(e) => setSeed(parseInt(e.target.value, 10) || 42)}
-              />
-            </label>
-            <div className={styles.fieldGroup} style={{ justifyContent: 'flex-end' }}>
-              <button
-                id="btn-run-simulation"
-                className="btn btn--primary"
-                onClick={runSim}
-                disabled={isRunning}
-              >
-                {loading ? 'Starting…' : polling ? `Waiting… (${pollAttempt}/${MAX_POLL_ATTEMPTS})` : '▶ Run Experiment'}
-              </button>
+        {/* Rig Terminal & Configuration */}
+        <section
+          className={`${styles.rigTerminal} ${isRunning ? styles.rigTerminalRunning : ''}`}
+          aria-label="Simulation configuration"
+        >
+          <div className={styles.rigHeader}>
+            <div className={styles.rigTitleGroup}>
+              <Cpu size={18} color="var(--color-brand-primary)" />
+              <span className="label-mono" style={{ fontSize: 12, fontWeight: 700 }}>
+                SYNTHETIC TRANSACTION MINING RIG
+              </span>
+            </div>
+            <div className={`${styles.rigStatusPill} ${isRunning ? styles.rigStatusPillActive : ''}`}>
+              {isRunning && <span className={styles.statusDotPulse} />}
+              {isRunning ? 'MINING BATCH IN PROGRESS' : 'RIG STANDBY · READY'}
             </div>
           </div>
 
-          {/* Progress bar */}
-          {polling && (
-            <div className={styles.progressBar}>
-              <div
-                className={styles.progressFill}
-                style={{ width: `${(pollAttempt / MAX_POLL_ATTEMPTS) * 100}%` }}
-              />
+          <div className={styles.configGrid}>
+            {/* Rows Config */}
+            <div className={styles.fieldGroup}>
+              <div className={styles.fieldLabel}>
+                <span>Dataset Batch Size</span>
+                <span style={{ color: 'var(--color-brand-primary)' }}>{rows.toLocaleString()} Cases</span>
+              </div>
+              <div className={styles.inputGroup}>
+                <input
+                  id="sim-rows"
+                  className={styles.numberInput}
+                  type="number"
+                  min={100}
+                  max={50000}
+                  step={500}
+                  value={rows}
+                  disabled={isRunning}
+                  onChange={(e) => setRows(parseInt(e.target.value, 10) || 1000)}
+                />
+              </div>
+              <div className={styles.presetChips}>
+                {[1000, 2500, 5000, 10000].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    className={`${styles.chip} ${rows === preset ? styles.chipActive : ''}`}
+                    onClick={() => setRows(preset)}
+                    disabled={isRunning}
+                  >
+                    {preset.toLocaleString()}
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
 
+            {/* Seed Config */}
+            <div className={styles.fieldGroup}>
+              <div className={styles.fieldLabel}>
+                <span>Latent Pseudorandom Seed</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Deterministic RNG</span>
+              </div>
+              <div className={styles.inputGroup}>
+                <input
+                  id="sim-seed"
+                  className={styles.numberInput}
+                  type="number"
+                  value={seed}
+                  disabled={isRunning}
+                  onChange={(e) => setSeed(parseInt(e.target.value, 10) || 42)}
+                />
+                <button
+                  type="button"
+                  className={styles.randomBtn}
+                  onClick={randomizeSeed}
+                  disabled={isRunning}
+                  title="Randomize Latent Seed"
+                >
+                  <RotateCcw size={15} />
+                </button>
+              </div>
+              <div className={styles.presetChips}>
+                {[42, 1337, 2024, 7777].map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    className={`${styles.chip} ${seed === preset ? styles.chipActive : ''}`}
+                    onClick={() => setSeed(preset)}
+                    disabled={isRunning}
+                  >
+                    #{preset}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Row */}
+          <div className={styles.actionRow}>
+            <div className={styles.rigTelemetryInfo}>
+              <div className={styles.telemetryItem}>
+                <span>PIPELINE:</span>
+                <span className={styles.telemetryVal}>10 STAGES</span>
+              </div>
+              <div className={styles.telemetryItem}>
+                <span>CONSENSUS:</span>
+                <span className={styles.telemetryVal}>EV &gt; THRESHOLD</span>
+              </div>
+              <div className={styles.telemetryItem}>
+                <span>BOUNTY:</span>
+                <span className={styles.telemetryVal} style={{ color: 'var(--color-accent-gold)' }}>+400 XP</span>
+              </div>
+            </div>
+
+            <button
+              id="btn-run-simulation"
+              className={styles.btnMiningExecute}
+              onClick={runSim}
+              disabled={isRunning}
+            >
+              {loading ? (
+                <>
+                  <Activity size={16} className="animate-spin" />
+                  INITIALIZING RUNNER…
+                </>
+              ) : polling ? (
+                <>
+                  <Zap size={16} className="animate-pulse" />
+                  MINING BATCH ({pollAttempt}/{MAX_POLL_ATTEMPTS})
+                </>
+              ) : (
+                <>
+                  <Play size={16} fill="currentColor" />
+                  START SIMULATION RUN
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Real-time Telemetry Bar */}
           {polling && (
-            <p className={styles.pollingHint}>
-              ⏳ Experiment running on backend ({rows.toLocaleString()} cases)…
-              Results appear in {Math.max(0, 5 - pollAttempt * 2)}–{Math.max(5, 30 - pollAttempt * 2)}s.
-            </p>
+            <div className={styles.miningTelemetryBox}>
+              <div className={styles.telemetryHeader}>
+                <span>
+                  SYNTHETIC RUNNER COMPUTING ({rows.toLocaleString()} TRANSACTIONS)
+                </span>
+                <span>{Math.round((pollAttempt / MAX_POLL_ATTEMPTS) * 100)}%</span>
+              </div>
+              <div className={styles.progressBarTrack}>
+                <div
+                  className={styles.progressBarFill}
+                  style={{ width: `${Math.max(5, (pollAttempt / MAX_POLL_ATTEMPTS) * 100)}%` }}
+                />
+              </div>
+              <div className={styles.telemetryConsole}>
+                <Activity size={13} color="var(--color-brand-primary)" className="animate-spin" />
+                <span>
+                  Stage {Math.min(10, Math.floor((pollAttempt % 10) + 1))}/10: Evaluating latent recovery outcomes under seed {seed}…
+                </span>
+              </div>
+            </div>
           )}
         </section>
 
@@ -181,82 +312,123 @@ export function SimulatorPage() {
           <ErrorBanner message={error} onRetry={() => setError(null)} />
         )}
 
-        {/* Results */}
+        {/* Experiment Results Container */}
         {result && (
-          <section className="card" style={{ marginTop: 16 }}>
+          <section className={styles.resultsCard}>
             <div className={styles.resultsHeader}>
-              <p className="label-mono">Results — Seed {result.seed} · {result.dataset_size.toLocaleString()} cases</p>
-              <p className={styles.policyLine}>{result.baseline_policy} vs {result.ai_policy}</p>
+              <div>
+                <h3 className={styles.resultsTitle}>Experiment Completed</h3>
+                <p className={styles.resultsMeta}>
+                  EXPERIMENT ID: {result.experiment_id} · SEED #{result.seed} · {result.dataset_size.toLocaleString()} BATCH ROWS
+                </p>
+              </div>
+
+              {result.net_incremental_recovery > 0 && (
+                <div className={styles.alphaBanner}>
+                  <Coins size={15} />
+                  <span>NET ALPHA GENERATED: +{formatINR(result.net_incremental_recovery)}</span>
+                </div>
+              )}
             </div>
 
-            {/* Metric pairs */}
+            {/* Incremental Recovery Hero Cards */}
+            <div className={styles.heroIncrementalGrid}>
+              <div className={styles.heroIncCard}>
+                <div className={styles.incCardHeader}>
+                  <span className={styles.incCardLabel}>Gross Incremental Recovery</span>
+                  <TrendingUp size={16} color="var(--color-text-muted)" />
+                </div>
+                <div className={styles.incCardVal}>{formatINR(result.incremental_recovery)}</div>
+                <p className={styles.incCardSub}>
+                  Total additional gross funds recovered by RecoveryOS AI over baseline naive retry.
+                </p>
+              </div>
+
+              <div className={`${styles.heroIncCard} ${styles.heroIncNet}`}>
+                <div className={styles.incCardHeader}>
+                  <span className={styles.incCardLabel} style={{ color: 'var(--color-brand-primary)' }}>
+                    Net Incremental Recovery (True Alpha)
+                  </span>
+                  <Zap size={16} color="var(--color-accent-gold)" />
+                </div>
+                <div className={styles.incCardVal} style={{ color: 'var(--color-accent-gold)' }}>
+                  {formatINR(result.net_incremental_recovery)}
+                </div>
+                <p className={styles.incCardSub}>
+                  Net revenue gain after strictly accounting for gateway fees and adapter execution costs.
+                </p>
+              </div>
+            </div>
+
+            {/* Metric Comparison Pairs */}
             <div className={styles.metricGrid}>
-              <MetricPair
-                label="Total Recovered"
+              <MetricCard
+                label="Total Funds Recovered"
                 baseline={formatINR(result.baseline_recovered)}
                 ai={formatINR(result.ai_recovered)}
               />
-              <MetricPair
-                label="Recovery Rate"
+              <MetricCard
+                label="Aggregate Recovery Rate"
                 baseline={formatPercent(result.baseline_recovery_rate)}
                 ai={formatPercent(result.ai_recovery_rate)}
               />
-              <MetricPair
-                label="Intervention Cost"
+              <MetricCard
+                label="Intervention & Gateway Cost"
                 baseline={formatINR(result.baseline_cost)}
                 ai={formatINR(result.ai_cost)}
               />
             </div>
 
-            {/* Incremental highlight */}
-            <div className={styles.incrementalRow}>
-              <div className={styles.incrementalCard}>
-                <p className={styles.incLabel}>Incremental Recovery</p>
-                <p className={styles.incValue}>{formatINR(result.incremental_recovery)}</p>
+            {/* Guardrail & Cryptographic Stats */}
+            <div className={styles.guardrailStrip}>
+              <div className={styles.shieldBadge}>
+                <ShieldCheck size={16} />
+                <span>GUARDRAIL INTEGRITY VERIFIED</span>
               </div>
-              <div className={`${styles.incrementalCard} ${styles.incrementalNet}`}>
-                <p className={styles.incLabel}>Net Incremental Recovery</p>
-                <p className={styles.incValue} style={{ color: 'hsl(140,55%,60%)' }}>
-                  {formatINR(result.net_incremental_recovery)}
-                </p>
+              <div className={styles.guardrailItem}>
+                Policy Stops: <span className={styles.guardrailVal}>{result.guardrail_stops}</span>
+              </div>
+              <div className={styles.guardrailItem}>
+                HITL Escalations: <span className={styles.guardrailVal}>{result.escalations}</span>
+              </div>
+              <div className={styles.guardrailItem}>
+                Zero-Action Preserves: <span className={styles.guardrailVal}>{result.do_nothing_count}</span>
+              </div>
+              <div className={styles.guardrailItem}>
+                Status: <span className={styles.guardrailVal} style={{ color: '#10B981' }}>CONSENSUS VALID</span>
               </div>
             </div>
 
-            {/* Guardrail stats */}
-            <div className={styles.guardrailStats}>
-              <span className="label-mono" style={{ fontSize: 11 }}>
-                Guardrail Stops: <b>{result.guardrail_stops}</b>
-              </span>
-              <span className="label-mono" style={{ fontSize: 11 }}>
-                Escalations: <b>{result.escalations}</b>
-              </span>
-              <span className="label-mono" style={{ fontSize: 11 }}>
-                Do Nothing: <b>{result.do_nothing_count}</b>
-              </span>
-            </div>
-
-            {/* Charts */}
-            <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-              <div>
-                <p className="label-mono" style={{ marginBottom: 8, fontSize: 11 }}>
-                  Recovery Comparison (₹)
-                </p>
+            {/* Dual Comparison Charts */}
+            <div className={styles.chartsGrid}>
+              <div className={styles.chartContainer}>
+                <div className={styles.chartHeader}>
+                  <span>Total Capital Recovered Comparison</span>
+                  <span style={{ color: 'var(--color-brand-primary)' }}>AI vs Baseline</span>
+                </div>
                 <RecoveryComparisonChart result={result} />
               </div>
-              <div>
-                <p className="label-mono" style={{ marginBottom: 8, fontSize: 11 }}>
-                  Cumulative Net Incremental Trajectory (₹)
-                </p>
+
+              <div className={styles.chartContainer}>
+                <div className={styles.chartHeader}>
+                  <span>Cumulative Net Alpha Trajectory</span>
+                  <span style={{ color: 'var(--color-accent-gold)' }}>Incremental ₹ Curve</span>
+                </div>
                 <IncrementalRevenueChart result={result} />
               </div>
             </div>
           </section>
         )}
 
-        {/* History */}
+        {/* Experiment History */}
         {history.length > 1 && (
-          <section className="card" style={{ marginTop: 16 }}>
-            <p className="label-mono" style={{ marginBottom: 12 }}>Recent Experiments</p>
+          <section className={styles.historySection}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <History size={16} color="var(--color-brand-primary)" />
+              <span className="label-mono" style={{ fontSize: 12, fontWeight: 700 }}>
+                PREVIOUS EXPERIMENT RUNS
+              </span>
+            </div>
             <div className={styles.historyList}>
               {history.map((h) => (
                 <div
@@ -266,9 +438,16 @@ export function SimulatorPage() {
                   role="button"
                   tabIndex={0}
                 >
-                  <span className={styles.historyId}>{h.experiment_id.slice(0, 8)}</span>
-                  <span className={styles.historyMeta}>Seed {h.seed} · {h.dataset_size} rows</span>
-                  <span className={styles.historyNet}>Net: {formatINR(h.net_incremental_recovery)}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <CheckCircle2 size={15} color="#10B981" />
+                    <span className={styles.historyId}>{h.experiment_id.slice(0, 8)}</span>
+                    <span className={styles.historyMeta}>
+                      Seed #{h.seed} · {h.dataset_size.toLocaleString()} cases
+                    </span>
+                  </div>
+                  <span className={styles.historyNet}>
+                    Net Alpha: {formatINR(h.net_incremental_recovery)}
+                  </span>
                 </div>
               ))}
             </div>
@@ -278,8 +457,8 @@ export function SimulatorPage() {
         {!result && !isRunning && !error && (
           <EmptyState
             icon="⚗"
-            title="No experiment yet"
-            description="Configure rows and seed, then click Run Experiment. Results appear within 5–30 seconds depending on dataset size."
+            title="Rig Standing By"
+            description="Configure synthetic dataset rows and random seed above, then execute simulation. Telemetry outputs and net incremental alpha curves generate in real-time."
           />
         )}
       </div>

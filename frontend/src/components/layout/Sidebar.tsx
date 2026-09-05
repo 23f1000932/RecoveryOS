@@ -1,66 +1,113 @@
 /**
- * RecoveryOS — Sidebar Navigation Component
- *
- * The editorial, minimal left sidebar. Playfair Display wordmark,
- * Source Sans 3 nav items. No icons except small geometric indicators.
+ * RecoveryOS — Bitcoin DeFi Sidebar Navigation
  */
 
-import { NavLink } from 'react-router-dom';
-import styles from './Sidebar.module.css';
+import React from "react";
+import { NavLink } from "react-router-dom";
+import {
+  LayoutDashboard,
+  Layers,
+  Cpu,
+  ShieldCheck,
+  FileCode2,
+  Activity,
+  Zap,
+} from "lucide-react";
+import styles from "./Sidebar.module.css";
 
 const NAV_ITEMS = [
-  { path: '/', label: 'Command Center', description: 'Financial overview' },
-  { path: '/recovery-queue', label: 'Recovery Queue', description: 'Active cases' },
-  { path: '/simulator', label: 'Simulator', description: 'A/B experiments' },
-  { path: '/policies', label: 'Policies', description: 'Guardrail config' },
-  { path: '/audit', label: 'Audit Log', description: 'Decision trail' },
+  {
+    path: "/",
+    label: "Command Center",
+    description: "Financial Alpha & Metrics",
+    icon: LayoutDashboard,
+  },
+  {
+    path: "/recovery-queue",
+    label: "Recovery Queue",
+    description: "Real-time Interventions",
+    icon: Layers,
+  },
+  {
+    path: "/simulator",
+    label: "Mining Simulator",
+    description: "Stress Test & A/B Engine",
+    icon: Cpu,
+  },
+  {
+    path: "/policies",
+    label: "Smart Guardrails",
+    description: "Policy & Limit Engine",
+    icon: ShieldCheck,
+  },
+  {
+    path: "/audit",
+    label: "Ledger Audit",
+    description: "Immutable Decision Trail",
+    icon: FileCode2,
+  },
 ] as const;
 
-export function Sidebar() {
+export const Sidebar: React.FC = () => {
   return (
     <aside className={styles.sidebar} aria-label="Main navigation">
-      {/* Wordmark */}
+      {/* Brand Header */}
       <div className={styles.wordmark}>
-        <span className={styles.wordmarkPrimary}>Recovery</span>
-        <span className={styles.wordmarkAccent}>OS</span>
-        <span className={styles.wordmarkVersion}>v1.0</span>
+        <div className={styles.logoContainer}>
+          <div className={styles.logoOrb}>
+            <Zap size={16} className="text-[#030304] fill-[#030304]" />
+          </div>
+          <div>
+            <div className={styles.logoText}>
+              <span className={styles.brandTitle}>Recovery</span>
+              <span className={styles.brandAccent}>OS</span>
+            </div>
+            <span className={styles.rigBadge}>DEFI MINING RIG</span>
+          </div>
+        </div>
       </div>
 
-      {/* Divider */}
-      <hr className="editorial-rule" />
-
-      {/* Navigation */}
+      {/* Navigation Links */}
       <nav className={styles.nav}>
-        <p className={`label-mono ${styles.navLabel}`}>Navigation</p>
+        <p className={styles.navSectionLabel}>Core Protocol</p>
         <ul className={styles.navList} role="list">
-          {NAV_ITEMS.map(({ path, label, description }) => (
+          {NAV_ITEMS.map(({ path, label, description, icon: Icon }) => (
             <li key={path}>
               <NavLink
                 to={path}
-                end={path === '/'}
+                end={path === "/"}
                 className={({ isActive }) =>
-                  `${styles.navItem} ${isActive ? styles.navItemActive : ''}`
+                  `${styles.navItem} ${isActive ? styles.navItemActive : ""}`
                 }
-                aria-current={undefined}
               >
-                <span className={styles.navItemIndicator} aria-hidden="true" />
-                <span>
+                <div className={styles.iconWrapper}>
+                  <Icon size={17} />
+                </div>
+                <div className={styles.itemText}>
                   <span className={styles.navItemLabel}>{label}</span>
                   <span className={styles.navItemDescription}>{description}</span>
-                </span>
+                </div>
               </NavLink>
             </li>
           ))}
         </ul>
       </nav>
 
-      {/* Footer */}
+      {/* Cryptographic Rig Status Footer */}
       <div className={styles.footer}>
-        <hr className="editorial-rule" />
-        <p className={styles.footerText}>
-          Razorpay AI Buildathon 2025
-        </p>
+        <div className={styles.statusBox}>
+          <div className={styles.statusRow}>
+            <span className={styles.statusDot} />
+            <span className={styles.statusText}>ENGINE ONLINE</span>
+          </div>
+          <div className={styles.systemMetrics}>
+            <span>BLOCK: 840,219</span>
+            <span>PING: 14ms</span>
+          </div>
+        </div>
+        <p className={styles.copyrightText}>Razorpay AI Buildathon</p>
       </div>
     </aside>
   );
-}
+};
+export default Sidebar;

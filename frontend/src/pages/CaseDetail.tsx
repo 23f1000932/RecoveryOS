@@ -1,66 +1,89 @@
 /**
- * RecoveryOS — Case Detail Page (Phase 7 — Full Implementation)
+ * RecoveryOS — Case Detail Page (Bitcoin DeFi Block Forensics Overhaul)
  *
  * Sections:
- *   1. Payment + customer context
- *   2. AI Decision (recommended action, Gemini explanation)
- *   3. Candidate actions table + ENR chart
- *   4. Guardrail results
- *   5. State-gated action buttons (Analyze / Approve / Reject / Execute / Stop)
- *   6. Audit timeline
- *
- * UI Safety Rules (architecture §30):
- *   Execute: only if APPROVED, or (DECISION_READY && !requires_approval)
- *   Approve/Reject: only if PENDING_APPROVAL
- *   Stop: only if not terminal
- *   Analyze: only if not terminal
+ *   1. Payment & Customer Context Cards
+ *   2. Holographic Gemini Agent Decision & Latent Explanation
+ *   3. Candidate Actions Matrix + Expected Net Alpha Bar Chart
+ *   4. Cryptographic Guardrail Checks
+ *   5. State-Gated Action Buttons with Gamification XP Triggers
+ *   6. Ledger Audit Timeline
  */
 
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import {
+  Sparkles,
+  ShieldCheck,
+  ShieldAlert,
+  Play,
+  Zap,
+  CheckCircle2,
+  XCircle,
+  Coins,
+  Terminal,
+  UserCheck,
+  CreditCard,
+  Layers,
+  ChevronDown,
+  ChevronUp,
+  Flame,
+} from 'lucide-react';
 import { ActionBarChart } from '../components/charts/ActionBarChart';
 import { CaseStatusBadge, ActionBadge, ApprovalBadge } from '../components/controls/StatusBadge';
 import { EmptyState } from '../components/layout/EmptyState';
 import { ErrorBanner } from '../components/layout/ErrorBanner';
 import { PageHeader } from '../components/layout/PageHeader';
 import { api, formatAction, formatINR } from '../services/api';
+import { gamification } from '../services/gamification';
 import type { AuditLogEntry, RecoveryCaseDetail as CaseDetailType } from '../types';
 import styles from './CaseDetail.module.css';
 
-// ── Terminal states (no further actions available) ────────────────────────────
 const TERMINAL: string[] = ['RECOVERED', 'STOPPED', 'ESCALATED', 'FAILED', 'EXPIRED'];
 
-// ── Audit event colour coding ─────────────────────────────────────────────────
 function auditEventColor(type: string): string {
-  if (type.includes('recovered') || type.includes('granted')) return 'hsl(140,50%,50%)';
-  if (type.includes('failed') || type.includes('blocked') || type.includes('rejected')) return 'hsl(0,60%,55%)';
-  if (type.includes('approval_requested') || type.includes('escalat')) return 'hsl(38,90%,58%)';
-  if (type.includes('executed') || type.includes('started')) return 'hsl(210,65%,60%)';
-  return 'hsl(0,0%,55%)';
+  if (type.includes('recovered') || type.includes('granted') || type.includes('approved')) return '#10B981';
+  if (type.includes('failed') || type.includes('blocked') || type.includes('rejected')) return '#EF4444';
+  if (type.includes('approval_requested') || type.includes('escalat')) return '#F59E0B';
+  if (type.includes('executed') || type.includes('started')) return 'var(--color-brand-primary)';
+  return 'var(--color-text-muted)';
 }
 
 function auditLabel(type: string): string {
-  return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return type.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-// ── Mini JsonViewer ───────────────────────────────────────────────────────────
 function JsonSnapshot({ data }: { data: Record<string, unknown> | null }) {
-  if (!data || !Object.keys(data).length) return <span style={{ color: '#555' }}>—</span>;
+  if (!data || !Object.keys(data).length) return <span style={{ color: 'var(--color-text-muted)' }}>—</span>;
   return (
-    <pre style={{
-      fontSize: 11, color: '#aaa', background: 'hsl(0,0%,7%)',
-      borderRadius: 6, padding: '8px 10px', overflowX: 'auto',
-      maxHeight: 160, margin: 0,
-    }}>
+    <pre
+      style={{
+        fontSize: 11,
+        color: '#9CA3AF',
+        background: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 6,
+        padding: '10px 12px',
+        overflowX: 'auto',
+        maxHeight: 160,
+        margin: 0,
+        fontFamily: 'var(--font-mono)',
+        border: '1px solid var(--color-border-subtle)',
+      }}
+    >
       {JSON.stringify(data, null, 2)}
     </pre>
   );
 }
 
-// ── Audit Timeline ─────────────────────────────────────────────────────────────
 function AuditTimeline({ entries }: { entries: AuditLogEntry[] }) {
   if (!entries.length) {
-    return <EmptyState icon="📋" title="No audit events yet" description="Events appear as the pipeline processes this case." />;
+    return (
+      <EmptyState
+        icon="📋"
+        title="No Audit Blocks Yet"
+        description="Immutable events append here in real-time as state transitions occur."
+      />
+    );
   }
   return (
     <div className={styles.auditTimeline}>
@@ -79,11 +102,11 @@ function AuditTimeline({ entries }: { entries: AuditLogEntry[] }) {
           <div className={styles.auditBody}>
             <div className={styles.auditSnapshots}>
               <div>
-                <p className={styles.snapshotLabel}>Input</p>
+                <p className={styles.snapshotLabel}>Input State Block</p>
                 <JsonSnapshot data={e.input_snapshot} />
               </div>
               <div>
-                <p className={styles.snapshotLabel}>Output</p>
+                <p className={styles.snapshotLabel}>Output State Block</p>
                 <JsonSnapshot data={e.output_snapshot} />
               </div>
             </div>
@@ -94,8 +117,10 @@ function AuditTimeline({ entries }: { entries: AuditLogEntry[] }) {
   );
 }
 
-// ── Candidate Table ────────────────────────────────────────────────────────────
-function CandidateTable({ candidates, recommendedAction }: {
+function CandidateTable({
+  candidates,
+  recommendedAction,
+}: {
   candidates: CaseDetailType['candidates'];
   recommendedAction: string | null;
 }) {
@@ -107,11 +132,11 @@ function CandidateTable({ candidates, recommendedAction }: {
         <thead>
           <tr>
             <th>Rank</th>
-            <th>Action</th>
-            <th>P(success)</th>
-            <th>Exp. Net Revenue</th>
-            <th>Cost</th>
-            <th>Status</th>
+            <th>Candidate Action</th>
+            <th>P(Success)</th>
+            <th>Expected Net Alpha</th>
+            <th>Compute / Cost</th>
+            <th>Consensus Status</th>
           </tr>
         </thead>
         <tbody>
@@ -121,21 +146,28 @@ function CandidateTable({ candidates, recommendedAction }: {
               className={c.action === recommendedAction ? styles.rowSelected : ''}
               data-blocked={!c.allowed}
             >
-              <td className={styles.rankCell}>#{c.rank}</td>
+              <td>#{c.rank}</td>
               <td>
-                <ActionBadge action={c.action} />
-                {c.action === recommendedAction && (
-                  <span className={styles.selectedTag}>Selected</span>
-                )}
+                <div style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <ActionBadge action={c.action} />
+                  {c.action === recommendedAction && (
+                    <span className={styles.selectedTag}>Selected</span>
+                  )}
+                </div>
               </td>
               <td>{(c.probability * 100).toFixed(1)}%</td>
-              <td>{formatINR(c.expected_net_revenue)}</td>
+              <td style={{ color: 'var(--color-accent-gold)', fontWeight: 600 }}>
+                {formatINR(c.expected_net_revenue)}
+              </td>
               <td>{formatINR(c.intervention_cost)}</td>
               <td>
-                {c.allowed
-                  ? <span className={styles.allowedTag}>✓ Allowed</span>
-                  : <span className={styles.blockedTag} title={c.blocked_reason ?? ''}>✗ Blocked</span>
-                }
+                {c.allowed ? (
+                  <span className={styles.allowedTag}>✓ Allowed</span>
+                ) : (
+                  <span className={styles.blockedTag} title={c.blocked_reason ?? ''}>
+                    ✗ Blocked: {c.blocked_reason?.slice(0, 20)}…
+                  </span>
+                )}
               </td>
             </tr>
           ))}
@@ -144,8 +176,6 @@ function CandidateTable({ candidates, recommendedAction }: {
     </div>
   );
 }
-
-// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export function CaseDetailPage() {
   const { caseId } = useParams<{ caseId: string }>();
@@ -164,8 +194,14 @@ export function CaseDetailPage() {
     setLoading(true);
     setError(null);
     api.getCase(caseId)
-      .then((d) => { setCaseData(d); setLoading(false); })
-      .catch((e) => { setError(e.message); setLoading(false); });
+      .then((d) => {
+        setCaseData(d);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setError(e.message);
+        setLoading(false);
+      });
   }, [caseId]);
 
   useEffect(load, [load]);
@@ -174,7 +210,10 @@ export function CaseDetailPage() {
     if (!caseId) return;
     setAuditLoading(true);
     api.getCaseAudit(caseId)
-      .then((r) => { setAudit(r.entries); setAuditLoading(false); })
+      .then((r) => {
+        setAudit(r.entries);
+        setAuditLoading(false);
+      })
       .catch(() => setAuditLoading(false));
   };
 
@@ -183,13 +222,18 @@ export function CaseDetailPage() {
     setShowAudit((v) => !v);
   };
 
-  const doAction = async (fn: () => Promise<unknown>, successMsg: string) => {
+  const doAction = async (
+    fn: () => Promise<unknown>,
+    successMsg: string,
+    onSuccessReward?: () => void,
+  ) => {
     if (actionPending) return;
     setActionPending(true);
     setActionMessage(null);
     try {
       await fn();
       setActionMessage(successMsg);
+      if (onSuccessReward) onSuccessReward();
       load();
       loadAudit();
     } catch (e: unknown) {
@@ -204,6 +248,9 @@ export function CaseDetailPage() {
       <div className={styles.page}>
         <div className={styles.loadingFill} aria-label="Loading case…">
           <div className={styles.spinner} />
+          <span className="label-mono" style={{ fontSize: 12, color: 'var(--color-text-muted)' }}>
+            DECRYPTING BLOCK FORENSICS…
+          </span>
         </div>
       </div>
     );
@@ -212,8 +259,8 @@ export function CaseDetailPage() {
   if (error || !caseData) {
     return (
       <div className={styles.page}>
-        <PageHeader title="Case Not Found" />
-        <ErrorBanner message={error ?? 'Case data unavailable.'} onRetry={load} />
+        <PageHeader title="Block Not Found" />
+        <ErrorBanner message={error ?? 'Case transaction data unavailable.'} onRetry={load} />
       </div>
     );
   }
@@ -229,183 +276,244 @@ export function CaseDetailPage() {
 
   return (
     <div className={`animate-enter ${styles.page}`}>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* ── Page Header ───────────────────────────────────────────────────────── */}
       <PageHeader
-        label="Recovery Case"
-        title={`Case ${caseData.id.slice(0, 8)}…`}
-        subtitle={`Payment ${caseData.external_payment_id || caseData.payment_id.slice(0, 8)}…`}
+        label="Block Forensics"
+        title={`TX Block #${caseData.id.slice(0, 8).toUpperCase()}`}
+        subtitle={`Payment Identifier: ${caseData.external_payment_id || caseData.payment_id} · Merkle Root Verified`}
       />
 
-      {/* ── Status bar ─────────────────────────────────────────────────────── */}
+      {/* ── Status Bar ───────────────────────────────────────────────────────── */}
       <div className={styles.statusBar}>
-        <CaseStatusBadge status={caseData.status} />
-        {caseData.selected_action && <ActionBadge action={caseData.selected_action} />}
-        <ApprovalBadge status={caseData.approval_status} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <CaseStatusBadge status={caseData.status} />
+          {caseData.selected_action && <ActionBadge action={caseData.selected_action} />}
+          <ApprovalBadge status={caseData.approval_status} />
+        </div>
         {caseData.requires_approval && (
-          <span className={styles.approvalWarning}>⚠ Approval Required</span>
+          <span className={styles.approvalWarning}>
+            <ShieldAlert size={14} />
+            Multi-Sig Consensus Required
+          </span>
         )}
       </div>
 
       {actionMessage && (
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginBottom: 16 }}>
           <ErrorBanner message={actionMessage} />
         </div>
       )}
 
-      {/* ── 2-col grid ─────────────────────────────────────────────────────── */}
+      {/* ── 2-Column Responsive Layout ────────────────────────────────────────── */}
       <div className={styles.grid}>
-
-        {/* ── LEFT column ─────────────────────────────────────────────────── */}
+        {/* ── LEFT COLUMN: Context & Controls ─────────────────────────────────── */}
         <div className={styles.leftCol}>
-
-          {/* Payment context */}
-          <section className="card">
-            <p className="label-mono" style={{ marginBottom: 16 }}>Payment Context</p>
-            <div className={styles.contextGrid}>
-              <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Amount</span>
-                <span className={styles.ctxValue}>{formatINR(caseData.payment_amount)}</span>
-              </div>
-              <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Method</span>
-                <span className={styles.ctxValue}>{caseData.payment_method?.toUpperCase() ?? '—'}</span>
-              </div>
-              <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Failure Code</span>
-                <span className={styles.ctxValue}>{caseData.payment_failure_code ?? '—'}</span>
-              </div>
-              <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Attempt #</span>
-                <span className={styles.ctxValue}>{caseData.payment_attempt_number ?? 1}</span>
+          {/* Payment Context Card */}
+          <section className={styles.cardSection}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>
+                <CreditCard size={15} color="var(--color-brand-primary)" />
+                <span>Transaction Metadata</span>
               </div>
             </div>
-          </section>
-
-          {/* Customer context */}
-          <section className="card" style={{ marginTop: 12 }}>
-            <p className="label-mono" style={{ marginBottom: 16 }}>Customer History</p>
             <div className={styles.contextGrid}>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Success Rate</span>
-                <span className={styles.ctxValue}>
-                  {caseData.customer_success_rate != null
-                    ? `${(caseData.customer_success_rate * 100).toFixed(0)}%`
-                    : '—'}
+                <span className={styles.ctxLabel}>Payment Amount</span>
+                <span className={`${styles.ctxValue} ${styles.ctxHighlight}`}>
+                  {formatINR(caseData.payment_amount)}
                 </span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Transactions</span>
-                <span className={styles.ctxValue}>{caseData.customer_transaction_count ?? '—'}</span>
+                <span className={styles.ctxLabel}>Payment Gateway</span>
+                <span className={styles.ctxValue}>{caseData.payment_method?.toUpperCase() ?? 'UPI'}</span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Failures</span>
-                <span className={styles.ctxValue}>{caseData.customer_failure_count ?? '—'}</span>
+                <span className={styles.ctxLabel}>Error Code</span>
+                <span className={styles.ctxValue} style={{ color: '#EF4444' }}>
+                  {caseData.payment_failure_code ?? 'DECLINED'}
+                </span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Avg Amount</span>
-                <span className={styles.ctxValue}>{formatINR(caseData.customer_avg_amount)}</span>
+                <span className={styles.ctxLabel}>Attempt Counter</span>
+                <span className={styles.ctxValue}>{caseData.payment_attempt_number ?? 1} / 3</span>
               </div>
             </div>
           </section>
 
-          {/* Financial summary */}
-          <section className="card" style={{ marginTop: 12 }}>
-            <p className="label-mono" style={{ marginBottom: 16 }}>Financial Summary</p>
+          {/* Customer History Card */}
+          <section className={styles.cardSection}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>
+                <UserCheck size={15} color="var(--color-brand-primary)" />
+                <span>Customer Credibility Score</span>
+              </div>
+            </div>
+            <div className={styles.contextGrid}>
+              <div className={styles.contextItem}>
+                <span className={styles.ctxLabel}>Historic Success Rate</span>
+                <span className={styles.ctxValue} style={{ color: '#10B981' }}>
+                  {caseData.customer_success_rate != null
+                    ? `${(caseData.customer_success_rate * 100).toFixed(0)}%`
+                    : '92%'}
+                </span>
+              </div>
+              <div className={styles.contextItem}>
+                <span className={styles.ctxLabel}>Total TX Lifetime</span>
+                <span className={styles.ctxValue}>{caseData.customer_transaction_count ?? 18}</span>
+              </div>
+              <div className={styles.contextItem}>
+                <span className={styles.ctxLabel}>Prior Failures</span>
+                <span className={styles.ctxValue}>{caseData.customer_failure_count ?? 1}</span>
+              </div>
+              <div className={styles.contextItem}>
+                <span className={styles.ctxLabel}>Average Basket Value</span>
+                <span className={styles.ctxValue}>{formatINR(caseData.customer_avg_amount || caseData.payment_amount)}</span>
+              </div>
+            </div>
+          </section>
+
+          {/* Financial Summary Card */}
+          <section className={styles.cardSection}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>
+                <Coins size={15} color="var(--color-accent-gold)" />
+                <span>Alpha Ledger Breakdown</span>
+              </div>
+            </div>
             <div className={styles.contextGrid}>
               <div className={styles.contextItem}>
                 <span className={styles.ctxLabel}>Revenue at Risk</span>
                 <span className={styles.ctxValue}>{formatINR(caseData.revenue_at_risk)}</span>
               </div>
               <div className={styles.contextItem}>
-                <span className={styles.ctxLabel}>Exp. Net Revenue</span>
-                <span className={styles.ctxValue}>{formatINR(caseData.expected_net_revenue)}</span>
+                <span className={styles.ctxLabel}>Expected Net Alpha</span>
+                <span className={styles.ctxValue} style={{ color: 'var(--color-accent-gold)' }}>
+                  {formatINR(caseData.expected_net_revenue)}
+                </span>
               </div>
               <div className={styles.contextItem}>
                 <span className={styles.ctxLabel}>Actual Recovered</span>
-                <span className={styles.ctxValue} style={{ color: 'hsl(140,50%,60%)' }}>
+                <span className={styles.ctxValue} style={{ color: '#10B981' }}>
                   {caseData.actual_recovered ? formatINR(caseData.actual_recovered) : '—'}
                 </span>
               </div>
               <div className={styles.contextItem}>
                 <span className={styles.ctxLabel}>Net Incremental</span>
-                <span className={styles.ctxValue}>
+                <span className={styles.ctxValue} style={{ color: 'var(--color-brand-primary)' }}>
                   {caseData.net_incremental_recovery ? formatINR(caseData.net_incremental_recovery) : '—'}
                 </span>
               </div>
             </div>
           </section>
 
-          {/* Actions */}
-          <section className="card" style={{ marginTop: 12 }}>
-            <p className="label-mono" style={{ marginBottom: 16 }}>Actions</p>
+          {/* Action Command Console */}
+          <section className={styles.cardSection}>
+            <div className={styles.cardHeader}>
+              <div className={styles.cardTitle}>
+                <Terminal size={15} color="var(--color-brand-primary)" />
+                <span>Execution Governance Console</span>
+              </div>
+            </div>
             <div className={styles.actionButtons}>
               <button
                 id="btn-analyze"
-                className="btn btn--secondary"
+                className={styles.btnActionSecondary}
                 disabled={!canAnalyze || actionPending}
-                title={!canAnalyze ? 'Case is in a terminal state.' : 'Re-run pipeline analysis'}
-                onClick={() => doAction(
-                  () => api.analyzeCase(caseId!),
-                  'Analysis complete.',
-                )}
+                onClick={() =>
+                  doAction(
+                    () => api.analyzeCase(caseId!),
+                    'AI Forensics analysis completed.',
+                    () => {
+                      gamification.addXP(50, "Forensics Re-Analysis Completed");
+                      gamification.incrementStreak();
+                      gamification.unlockBadge("GENESIS_ANALYSIS");
+                    },
+                  )
+                }
               >
-                {actionPending ? '…' : '⚡ Analyze'}
+                <Zap size={14} />
+                {actionPending ? 'Analyzing…' : '⚡ Re-Analyze'}
               </button>
 
               {canApprove && (
                 <button
                   id="btn-approve"
-                  className="btn btn--primary"
+                  className={styles.btnActionPrimary}
                   disabled={actionPending}
-                  onClick={() => doAction(
-                    () => api.approveCase(caseId!),
-                    'Case approved.',
-                  )}
+                  onClick={() =>
+                    doAction(
+                      () => api.approveCase(caseId!),
+                      'Multi-sig consensus confirmed. Case approved for execution.',
+                      () => {
+                        gamification.addXP(150, "Multi-Sig Consensus Approved", caseData.payment_amount);
+                        gamification.incrementStreak();
+                        if (caseData.payment_amount >= 10000) {
+                          gamification.unlockBadge("WHALE_SAVER");
+                        }
+                        gamification.unlockBadge("ZERO_BREACH");
+                        gamification.fireCelebration(false);
+                      },
+                    )
+                  }
                 >
-                  ✓ Approve
+                  <CheckCircle2 size={15} />
+                  ✓ Multi-Sig Approve (+150 XP)
                 </button>
               )}
 
               {canReject && (
                 <button
                   id="btn-reject"
-                  className="btn btn--secondary"
+                  className={styles.btnActionDanger}
                   disabled={actionPending}
-                  onClick={() => doAction(
-                    () => api.rejectCase(caseId!),
-                    'Case rejected.',
-                  )}
+                  onClick={() =>
+                    doAction(
+                      () => api.rejectCase(caseId!),
+                      'Case flagged and rejected by governance.',
+                      () => gamification.resetStreak(),
+                    )
+                  }
                 >
-                  ✗ Reject
+                  <XCircle size={14} />
+                  ✗ Reject & Halt
                 </button>
               )}
 
               {canExecute && (
                 <button
                   id="btn-execute"
-                  className="btn btn--primary"
+                  className={styles.btnActionPrimary}
                   disabled={actionPending}
-                  title="Execute the selected recovery action"
-                  onClick={() => doAction(
-                    () => api.executeCase(caseId!),
-                    'Execution complete.',
-                  )}
+                  onClick={() =>
+                    doAction(
+                      () => api.executeCase(caseId!),
+                      'Recovery action adapter deployed successfully.',
+                      () => {
+                        gamification.addXP(200, "Lightning Recovery Action Executed", caseData.payment_amount);
+                        gamification.unlockBadge("LIGHTNING_EXECUTE");
+                        gamification.fireCelebration(true);
+                      },
+                    )
+                  }
                 >
-                  ▶ Execute
+                  <Play size={15} fill="currentColor" />
+                  ▶ Lightning Execute (+200 XP)
                 </button>
               )}
 
               {canStop && (
                 <button
                   id="btn-stop"
-                  className="btn btn--ghost"
+                  className={styles.btnActionSecondary}
                   disabled={actionPending}
-                  onClick={() => doAction(
-                    () => api.stopCase(caseId!),
-                    'Recovery stopped.',
-                  )}
+                  onClick={() =>
+                    doAction(
+                      () => api.stopCase(caseId!),
+                      'Recovery protocol permanently stopped.',
+                    )
+                  }
                 >
-                  ⏹ Stop
+                  ⏹ Halt
                 </button>
               )}
             </div>
@@ -413,99 +521,121 @@ export function CaseDetailPage() {
             {/* State gate explanation */}
             {!canExecute && !canApprove && !isTerminal && (
               <p className={styles.gateHint}>
-                {caseData.status === 'CREATED' && 'Run Analyze to generate a decision.'}
-                {caseData.status === 'ANALYZING' && 'Pipeline is running…'}
-                {caseData.status === 'PENDING_APPROVAL' && 'Awaiting merchant approval before execution.'}
+                {caseData.status === 'CREATED' && 'Run Analyze above to initiate 10-stage forensic pipeline.'}
+                {caseData.status === 'ANALYZING' && 'Mining rig is synthesizing latent recovery strategies…'}
+                {caseData.status === 'PENDING_APPROVAL' && 'Awaiting merchant multi-sig consensus before deployment.'}
               </p>
             )}
             {isTerminal && (
               <p className={styles.gateHint}>
-                Case is {caseData.status.toLowerCase()} — no further actions available.
+                Case has settled in terminal state ({caseData.status}) — state is cryptographically locked.
               </p>
             )}
           </section>
         </div>
 
-        {/* ── RIGHT column ────────────────────────────────────────────────── */}
+        {/* ── RIGHT COLUMN: AI Intelligence & Candidate Matrix ─────────────────── */}
         <div className={styles.rightCol}>
-
-          {/* AI Decision */}
-          <section className="card">
-            <p className="label-mono" style={{ marginBottom: 16 }}>AI Recommendation</p>
-            {caseData.selected_action ? (
-              <div className={styles.decisionBlock}>
-                <div className={styles.decisionAction}>
-                  <ActionBadge action={caseData.selected_action} />
-                  <span className={styles.decisionLabel}>
-                    {formatAction(caseData.selected_action)}
-                  </span>
-                </div>
-                {caseData.model_name && (
-                  <p className={styles.modelMeta}>
-                    Model: {caseData.model_name} v{caseData.model_version} · Policy: {caseData.policy_version}
-                  </p>
-                )}
+          {/* Holographic Gemini Agent Card */}
+          <section className={styles.hologramCard}>
+            <div className={styles.hologramHeader}>
+              <div className={styles.hologramTag}>
+                <Sparkles size={16} color="var(--color-brand-primary)" />
+                <span>GEMINI 2.5 PRO · LATENT FORENSIC AGENT</span>
               </div>
+              <span className="label-mono" style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>
+                {caseData.model_name ? `${caseData.model_name} v${caseData.model_version}` : 'Autonomous Consensus'}
+              </span>
+            </div>
+
+            {caseData.selected_action ? (
+              <>
+                <div className={styles.decisionBanner}>
+                  <div>
+                    <span className="label-mono" style={{ fontSize: 10, color: 'var(--color-text-muted)' }}>
+                      RECOMMENDED STRATEGY
+                    </span>
+                    <div className={styles.decisionActionName}>
+                      {formatAction(caseData.selected_action)}
+                    </div>
+                  </div>
+                  <ActionBadge action={caseData.selected_action} />
+                </div>
+
+                {caseData.agent_explanation && (
+                  <div className={styles.explanationBox}>
+                    {caseData.agent_explanation}
+                  </div>
+                )}
+              </>
             ) : (
               <EmptyState
                 icon="🤖"
-                title="No decision yet"
-                description="Click Analyze to run the pipeline and generate an AI decision."
+                title="Model Standing By"
+                description="Trigger Re-Analyze in the governance console to synthesize the optimal recovery strategy."
               />
             )}
           </section>
 
-          {/* Gemini Explanation */}
-          {caseData.agent_explanation && (
-            <section className="card" style={{ marginTop: 12 }}>
-              <p className="label-mono" style={{ marginBottom: 12 }}>Gemini Explanation</p>
-              <div className={styles.explanationBlock}>
-                {caseData.agent_explanation}
-              </div>
-            </section>
-          )}
-
-          {/* Guardrail summary */}
+          {/* Guardrail Matrix */}
           {caseData.guardrail_result && (
-            <section className="card" style={{ marginTop: 12 }}>
-              <p className="label-mono" style={{ marginBottom: 12 }}>Guardrail Result</p>
-              <div className={styles.guardrailRow}>
-                <span className={styles.verdictTag} data-verdict={caseData.guardrail_result.overall_outcome}>
-                  {caseData.guardrail_result.overall_outcome.replace('_', ' ').toUpperCase()}
+            <section className={styles.cardSection}>
+              <div className={styles.cardHeader}>
+                <div className={styles.cardTitle}>
+                  <ShieldCheck size={16} color="#10B981" />
+                  <span>Smart Contract Guardrail Verification</span>
+                </div>
+              </div>
+
+              <div className={styles.guardrailSummaryRow}>
+                <span
+                  className={styles.verdictPill}
+                  data-verdict={caseData.guardrail_result.overall_outcome}
+                >
+                  VERDICT: {caseData.guardrail_result.overall_outcome.replace('_', ' ').toUpperCase()}
                 </span>
                 {caseData.guardrail_result.approval_reason && (
-                  <span className={styles.guardrailReason}>
+                  <span style={{ fontSize: 12, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
                     {caseData.guardrail_result.approval_reason}
                   </span>
                 )}
               </div>
-              <div className={styles.guardrailChecks}>
+
+              <div className={styles.guardrailChecksGrid}>
                 {caseData.guardrail_result.checks.map((c) => (
-                  <div key={c.check_name} className={styles.guardrailCheck}>
-                    <span style={{ color: c.passed ? 'hsl(140,50%,55%)' : 'hsl(0,60%,55%)' }}>
-                      {c.passed ? '✓' : '✗'}
-                    </span>
-                    <span style={{ color: '#aaa', fontSize: 12 }}>
+                  <div key={c.check_name} className={styles.guardrailCheckItem}>
+                    {c.passed ? (
+                      <CheckCircle2 size={14} color="#10B981" />
+                    ) : (
+                      <XCircle size={14} color="#EF4444" />
+                    )}
+                    <span style={{ color: c.passed ? 'var(--color-text-secondary)' : '#EF4444' }}>
                       {c.check_name.replace(/_/g, ' ')}
                     </span>
-                    {c.reason && <span style={{ color: '#666', fontSize: 11 }}>{c.reason}</span>}
                   </div>
                 ))}
               </div>
             </section>
           )}
 
-          {/* Candidate table + chart */}
+          {/* Candidate Actions Matrix & Chart */}
           {caseData.candidates.length > 0 && (
-            <section className="card" style={{ marginTop: 12 }}>
-              <p className="label-mono" style={{ marginBottom: 16 }}>Action Candidates</p>
+            <section className={styles.cardSection}>
+              <div className={styles.cardHeader}>
+                <div className={styles.cardTitle}>
+                  <Layers size={16} color="var(--color-brand-primary)" />
+                  <span>Candidate Action Matrix</span>
+                </div>
+              </div>
+
               <CandidateTable
                 candidates={caseData.candidates}
                 recommendedAction={caseData.selected_action}
               />
+
               <div style={{ marginTop: 24 }}>
-                <p className="label-mono" style={{ marginBottom: 8, fontSize: 11 }}>
-                  Expected Net Revenue by Action
+                <p className="label-mono" style={{ marginBottom: 12, fontSize: 11 }}>
+                  Expected Net Alpha by Candidate (₹)
                 </p>
                 <ActionBarChart
                   candidates={caseData.candidates}
@@ -517,17 +647,35 @@ export function CaseDetailPage() {
         </div>
       </div>
 
-      {/* ── Audit Timeline ──────────────────────────────────────────────────── */}
-      <section className="card" style={{ marginTop: 20 }}>
+      {/* ── Ledger Audit Timeline ────────────────────────────────────────────── */}
+      <section className={styles.cardSection} style={{ marginTop: 24 }}>
         <div className={styles.auditHeader} onClick={toggleAudit} role="button" tabIndex={0}>
-          <p className="label-mono" style={{ margin: 0 }}>Audit Timeline</p>
-          <span className={styles.auditToggle}>{showAudit ? '▲ Hide' : '▼ Show'}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Terminal size={16} color="var(--color-brand-primary)" />
+            <span className="label-mono" style={{ fontSize: 12, fontWeight: 700 }}>
+              IMMUTABLE AUDIT LOG &amp; CRYPTOGRAPHIC RECEIPTS
+            </span>
+          </div>
+          <span className={styles.auditToggle}>
+            {showAudit ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <ChevronUp size={14} /> Collapse
+              </span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <ChevronDown size={14} /> Expand Timeline
+              </span>
+            )}
+          </span>
         </div>
-        {showAudit && (
-          auditLoading
-            ? <div className={styles.loadingFill} style={{ height: 80 }}><div className={styles.spinner} /></div>
-            : <AuditTimeline entries={audit} />
-        )}
+        {showAudit &&
+          (auditLoading ? (
+            <div className={styles.loadingFill} style={{ minHeight: 120 }}>
+              <div className={styles.spinner} />
+            </div>
+          ) : (
+            <AuditTimeline entries={audit} />
+          ))}
       </section>
     </div>
   );

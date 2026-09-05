@@ -1,33 +1,32 @@
 /**
- * RecoveryOS — Page Header Component
- * Consistent editorial header for all pages.
- * Title in Playfair Display, subtitle in Source Sans 3.
+ * RecoveryOS — Page Header Component (Bitcoin DeFi Aesthetic)
  */
 
-import type { ReactNode } from 'react';
-import styles from './PageHeader.module.css';
+import React, { type ReactNode } from "react";
+import styles from "./PageHeader.module.css";
 
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
-  label?: string;            // IBM Plex Mono eyebrow label
-  actions?: ReactNode;       // Buttons / controls for the right side
+  label?: string;            // Monospace eyebrow label
+  actions?: ReactNode;       // CTAs / controls
 }
 
-export function PageHeader({ title, subtitle, label, actions }: PageHeaderProps) {
+export const PageHeader: React.FC<PageHeaderProps> = ({ title, subtitle, label, actions }) => {
   return (
     <header className={styles.header}>
       <div className={styles.content}>
         {label && (
-          <p className={`label-mono ${styles.label}`} aria-hidden="true">
-            {label}
-          </p>
+          <div className={styles.labelWrapper}>
+            <span className={styles.labelDot} />
+            <p className={styles.label}>{label}</p>
+          </div>
         )}
         <h1 className={styles.title}>{title}</h1>
         {subtitle && <p className={styles.subtitle}>{subtitle}</p>}
       </div>
       {actions && <div className={styles.actions}>{actions}</div>}
-      <hr className="editorial-rule" style={{ marginTop: '1.5rem' }} />
     </header>
   );
-}
+};
+export default PageHeader;

@@ -1,158 +1,229 @@
-/* RecoveryOS — AuditLogPage Styles (Phase 7) */
+/* RecoveryOS — AuditLogPage Styles (Bitcoin DeFi Ledger Overhaul) */
 
 .page {
-  max-width: 860px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 0 48px;
+  padding: 0 0 64px;
 }
 
 .loadingState {
   display: flex;
+  flex-direction: column;
   justify-content: center;
-  padding: 48px;
+  align-items: center;
+  padding: 64px;
+  gap: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
 }
 
 .spinner {
-  width: 28px;
-  height: 28px;
-  border: 3px solid hsl(0, 0%, 20%);
-  border-top-color: hsl(35, 85%, 60%);
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--color-brand-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Timeline container ──────────────────────────────────────────────────── */
+/* ── Filter Bar ─────────────────────────────────────────────────────────── */
 
-.timeline {
+.filterBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 8px 16px;
+  width: 280px;
+  transition: all var(--transition-fast);
+}
+
+.searchBox:focus-within {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 0 0 2px rgba(247, 147, 26, 0.15);
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  width: 100%;
+}
+
+.searchInput::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* ── Ledger Timeline Track ───────────────────────────────────────────────── */
+
+.timelineWrapper {
   position: relative;
-  padding-left: 20px;
+  padding-left: 28px;
 }
 
 .rail {
   position: absolute;
-  left: 3px;
-  top: 12px;
-  bottom: 12px;
+  left: 10px;
+  top: 16px;
+  bottom: 16px;
   width: 2px;
-  background: hsl(0, 0%, 13%);
-  border-radius: 1px;
+  background: linear-gradient(180deg, var(--color-brand-primary), rgba(247, 147, 26, 0.2) 80%, transparent 100%);
+  border-radius: var(--radius-full);
 }
 
 .entries {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 12px;
 }
 
-/* ── Single entry ────────────────────────────────────────────────────────── */
+/* ── Single Immutable Block Entry ────────────────────────────────────────── */
 
 .entry {
   position: relative;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
-  border: 1px solid hsl(0, 0%, 11%);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-surface);
+  transition: border-color var(--transition-fast);
 }
 
 .entry[open] {
-  border-color: hsl(0, 0%, 18%);
+  border-color: rgba(247, 147, 26, 0.4);
 }
 
 .summary {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: hsl(0, 0%, 8%);
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--color-surface);
   cursor: pointer;
   list-style: none;
-  transition: background 0.15s;
+  transition: background var(--transition-fast);
 }
 
 .summary::-webkit-details-marker { display: none; }
 
 .summary:hover {
-  background: hsl(0, 0%, 11%);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .dot {
-  width: 10px;
-  height: 10px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-left: -23px; /* align with rail */
-  box-shadow: 0 0 0 3px hsl(0, 0%, 8%);
+  margin-left: -34px; /* align on vertical neon rail */
+  box-shadow: 0 0 0 4px var(--color-bg-base), 0 0 8px currentColor;
 }
 
 .summaryMain {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
+.eventTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .eventLabel {
+  font-family: var(--font-mono);
   font-size: 13px;
-  font-weight: 600;
-  color: hsl(0, 0%, 85%);
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
 .eventMeta {
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: hsl(0, 0%, 40%);
-  font-family: 'JetBrains Mono', monospace;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.actorTag {
+  color: var(--color-brand-primary);
+  font-weight: 600;
 }
 
 .timestamp {
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: hsl(0, 0%, 40%);
-  font-family: 'JetBrains Mono', monospace;
+  color: var(--color-text-muted);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
-/* ── Expanded body ───────────────────────────────────────────────────────── */
+/* ── Expanded State Snapshots ────────────────────────────────────────────── */
 
 .body {
-  background: hsl(0, 0%, 5%);
-  padding: 14px 16px;
-  border-top: 1px solid hsl(0, 0%, 11%);
+  background: rgba(0, 0, 0, 0.4);
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border-subtle);
 }
 
-.snapshotRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.snapshotGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
 }
 
 .snapshot {
-  flex: 1;
-  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+}
+
+.snapshotHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
 }
 
 .snapshotLabel {
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: hsl(0, 0%, 40%);
-  margin: 0 0 6px;
+  color: var(--color-text-muted);
 }
 
 .snapshotPre {
+  font-family: var(--font-mono);
   font-size: 11px;
-  color: hsl(0, 0%, 65%);
-  background: hsl(0, 0%, 7%);
-  border-radius: 6px;
-  padding: 10px 12px;
+  color: #D1D5DB;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
   overflow-x: auto;
-  max-height: 200px;
+  max-height: 220px;
   margin: 0;
-  font-family: 'JetBrains Mono', monospace;
   line-height: 1.5;
 }
