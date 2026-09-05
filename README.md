@@ -1,6 +1,6 @@
 # RecoveryOS
 
-> **AI-powered payment recovery orchestrator for Razorpay — Buildathon 2025**
+> **AI-powered payment recovery orchestrator for Razorpay — Buildathon 2026**
 
 RecoveryOS is a production-ready backend + dashboard that intercepts failed Razorpay payments, runs them through an ML-optimized 10-stage recovery pipeline, and presents merchants with explainable, auditable decisions — all without ever touching financial values in the AI layer.
 
